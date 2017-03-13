@@ -6,7 +6,8 @@
 
 int main()
 {
-	printf("Prova di merda");
+	printf("Fuck the system");
+	printf("Hello world");
     return 0;
 }
 
