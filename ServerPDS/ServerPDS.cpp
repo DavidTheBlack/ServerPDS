@@ -29,7 +29,7 @@ BOOL CALLBACK enumWindowsProc(
 		return true;
 	}
 	else {
-		ShowWindow(hWnd, SW_SHOW);
+		//ShowWindow(hWnd, SW_SHOW);
 		//std::wcout << hWnd << TEXT(": Icona") << std::endl;
 		return true;
 	}
