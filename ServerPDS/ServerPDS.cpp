@@ -24,6 +24,9 @@ BOOL IsAltTabWindow(HWND hwnd)
 	
 		
 		//Check and ignore the PopUp and dialog windows 
+		//For each visible window, walk up its owner chain until you find the root owner.
+		//Then walk back down the visible last active popup chain until you find a visible window. 
+		//If you're back to where you're started, then put the window in the Alt+Tab list.
 		hwndTry = GetAncestor(hwnd, GA_ROOTOWNER);
 		while (hwndTry != hwndWalk)
 		{
@@ -51,9 +54,9 @@ BOOL IsAltTabWindow(HWND hwnd)
 			
 		// Check if the window is a ToolWindow -> ALT+SPACE or Right Click Menu 
 		// Tool windows should not be displayed either - these do not appear in the taskbar
-		if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) {
+		if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) 
 			return false;
-		}
+		
 		//The windows is an active window that can be selected with ALT+TAB
 		return true;
 	}
