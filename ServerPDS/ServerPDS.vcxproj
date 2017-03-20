@@ -149,7 +149,9 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Origine.cpp" />
     <ClCompile Include="ServerPDS.cpp" />
+    <ClCompile Include="socket.cpp" />
     <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
