@@ -1,4 +1,2 @@
-﻿  socket.cpp
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\socket.cpp(290): warning C4715: 'InitializeWinsock': non tutti i percorsi di controllo restituiscono un valore
-  ServerPDS.vcxproj -> C:\Users\David\documents\visual studio 2015\Projects\ServerPDS\Debug\ServerPDS.exe
-  ServerPDS.vcxproj -> C:\Users\David\documents\visual studio 2015\Projects\ServerPDS\Debug\ServerPDS.pdb (Full PDB)
+﻿  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\Debug\ServerPDS.exe
+  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\Debug\ServerPDS.pdb (Full PDB)

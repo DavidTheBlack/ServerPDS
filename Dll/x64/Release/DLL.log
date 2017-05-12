@@ -1,0 +1,8 @@
+﻿  stdafx.cpp
+  dllmain.cpp
+     Creazione della libreria C:\Users\David\documents\visual studio 2015\Projects\TestHook\x64\Release\DLL.lib e dell'oggetto C:\Users\David\documents\visual studio 2015\Projects\TestHook\x64\Release\DLL.exp
+  Generazione codice in corso...
+  All 153 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Generazione codice terminata
+  DLL.vcxproj -> C:\Users\David\documents\visual studio 2015\Projects\TestHook\x64\Release\DLL.dll
+  DLL.vcxproj -> C:\Users\David\documents\visual studio 2015\Projects\TestHook\x64\Release\DLL.pdb (Full PDB)

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 
+#include "MyHook.h"
 
 /*	
 	Check if the window identified from hwnd 
@@ -90,13 +91,77 @@ BOOL CALLBACK enumWindowsProc(
 	return true;
 }
 
-	
-	
+
+
+//
+//	
+//	
+//
+//int _tmain(int argc, _TCHAR* argv[]) {
+//	/*std::wcout << TEXT("Enumerating Windows...") << std::endl;
+//	BOOL enumeratingWindowsSucceeded = EnumWindows(enumWindowsProc, NULL);*/
+//	//int pid= std::cin.get();
+//	/*
+//	int pid;
+//	while (1) {
+//		std::cout << "Inserisci il PID del processo da controllare: ";
+//		std::cin >> pid ;
+//
+//
+//		HANDLE hnd = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+//		DWORD lpExitCode;
+//		bool rt = GetExitCodeProcess(hnd, &lpExitCode);
+//		if (rt) {
+//			std::cout << "Valore ritornato TRUE ";
+//		}
+//		else {
+//			std::cout << "Valore ritornato FALSE ";
+//		}
+//
+//
+//		std::cout << " lpExitCode: " << lpExitCode << std::endl;
+//		bool condition = true;
+//		while (!condition) {
+//			rt = GetExitCodeProcess(hnd, &lpExitCode);
+//
+//			if (lpExitCode != STILL_ACTIVE) {
+//				std::cout << "PROCESSO CHIUSO! - Avvio nuova instanza di notepad" << std::endl;
+//				system("notepad.exe");
+//				condition = false;
+//			}
+//		}
+//	}
+//		
+//	std::cin >> pid;
+//	*/
+//
+//	HANDLE  processList[10];
+//	HANDLE uscita;
+//	HWND prova;
+//
+//	uscita = CreateEvent(NULL, TRUE, FALSE, NULL);
+//	processList[0] = uscita;
+//
+//	WaitForMultipleObjects(std::size(processList), processList, FALSE, INFINITE);
+//
+//	/*
+//	1) thread2.evento=uscita;
+//	1.5) WHILE(TRUE)
+//	2) startThread( thread2.observe());
+//	3) quando succede qualcosa uscita=true;
+//	4) elaboro le mie cose
+//	5) evento=false;
+//
+//	
+//	*/
+//
+//
+//
+//	return 0;
+//	
+//}
 
 int _tmain(int argc, _TCHAR* argv[]) {
-	std::wcout << TEXT("Enumerating Windows...") << std::endl;
-	BOOL enumeratingWindowsSucceeded = EnumWindows(enumWindowsProc, NULL);
-	std::cin.get();
-	return 0;
-	
+	MyHook::Instance().StartMonitoringProcesses();
+
 }
