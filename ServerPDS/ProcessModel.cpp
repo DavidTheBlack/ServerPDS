@@ -14,7 +14,9 @@
   * @param new_var the new value of FocusedProcessPid
   */
   void ProcessModel::setFocusedProcess(HWND process) {
+	  std::lock_guard<std::mutex> l(mut);
 	  focusProcess = process;
+	  return;
   }
 
   /**
@@ -23,6 +25,7 @@
   * @return the value of FocusedProcessPid
   */
   HWND ProcessModel::getFocusedProcess() {
+	  std::lock_guard<std::mutex> l(mut);
 	  return focusProcess;
   }
 
@@ -30,6 +33,7 @@
   *Restituisce l'attuale numero di processi memorizzati nella struttura dati
   */
   int ProcessModel::getNumberOfProcesses() {
+	  std::lock_guard<std::mutex> l(mut);
 	  return processesList.size();
   }
 
@@ -63,6 +67,17 @@
 		  return true;
 	  }
 	  return false;
+  }
+
+  bool ProcessModel::setProcessesList(std::list<HWND> list) {
+	  if (processesList.empty()) {
+		  std::lock_guard<std::mutex> l(mut);
+		  processesList = list;
+		  return true;
+	  }
+	  else {
+		  return false;
+	  }
   }
 
   /**

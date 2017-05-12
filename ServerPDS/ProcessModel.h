@@ -50,6 +50,13 @@ public:
 	bool addProcess(HWND processHwnd);
 
 	/**
+	* Aggiunta safe di una lista di processi metodo richiamato alla prima esecuzione di windowsEnum
+	* @return bool
+	* @param  list
+	*/
+	bool setProcessesList(std::list<HWND> list);
+
+	/**
 	* Rimozione safe di un processo dalla struttura dati
 	* @return bool
 	* @param  processHwnd

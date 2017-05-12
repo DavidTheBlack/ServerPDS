@@ -3,23 +3,16 @@ class WindowsEnum
 {
 public:
 
-	struct ProcessInfo {
-		DWORD pId;
-		std::wstring processPath;
-		std::wstring caption;
-	} ;
 
 	WindowsEnum& enum_windows();
 
 
-	std::list<ProcessInfo>& getData();
+	std::list<HWND>& getData();
 
 private:
-	std::list<ProcessInfo> localProcessList;
+	std::list<HWND> localProcessList;
 
-	BOOL IsAltTabWindow(HWND hwnd);
-
-	ProcessInfo getProcessInfo(HWND hwnd);
+	BOOL IsAltTabWindow(HWND hwnd);	
 
 	BOOL wndProc(HWND hWnd);
 

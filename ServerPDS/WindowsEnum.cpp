@@ -16,7 +16,7 @@ WindowsEnum & WindowsEnum::enum_windows()
 	return *this;       //returns a reference
 }
 
-std::list<WindowsEnum::ProcessInfo>& WindowsEnum::getData()
+std::list<HWND>& WindowsEnum::getData()
 {
 	return localProcessList;   //returns a reference
 }
@@ -67,47 +67,6 @@ BOOL WindowsEnum::IsAltTabWindow(HWND hwnd)
 
 	//The windows is an active window that can be selected with ALT+TAB
 	return TRUE;
-}
-
-WindowsEnum::ProcessInfo WindowsEnum::getProcessInfo(HWND hwnd)
-{
-	HANDLE hProcess;
-	ProcessInfo pI;
-
-	GetWindowThreadProcessId(hwnd, &pI.pId); //retrieves the identifier of the process that created the window
-
-	if ((hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
-		FALSE,
-		pI.pId)) == NULL) // open an existing local process object returning an open handle to the specified process
-	{
-		std::cerr << "OpenProcess() failed: " << GetLastError() << "\n";
-	}
-	else
-	{
-		TCHAR name[MAX_PATH];
-		DWORD nameLength = MAX_PATH;
-		if (!QueryFullProcessImageName(hProcess, 0, name, &nameLength))  //retrieves the full name of the executable image for the specified process
-		{
-			std::cerr << "QueryFullProcessImageName() failed: " <<
-				GetLastError() << "\n";
-		}
-		else
-		{
-			pI.processPath = std::wstring(name);
-			CloseHandle(hProcess);
-		}
-	}
-	int length = GetWindowTextLength(hwnd) + 1;
-	if (length != 0) {
-		std::wstring windowTitle(length, '\0'); //Note that storage for a std::string is only guaranteed to be contiguous in C++11. With C++98 you should not really be using a std::string as a buffer; you should use std::vector.
-												//Also, you should preferrably not use a cast to remove const - ness.Instead, get the address of the first element.
-		GetWindowText(hwnd, &windowTitle[0], length);
-		pI.caption = windowTitle;
-	}
-	else {
-		std::wcout << hwnd << TEXT(": Finestra senza titolo") << std::endl;
-	}
-	return pI;
 }
 
 BOOL WindowsEnum::wndProc(HWND hWnd)

@@ -1,27 +1,27 @@
-#include "Controller.h"
-#include "ProcessModel.h"
-#include "CloseObserver.h"
 #include <Windows.h>
+#include "Controller.h"
+#include "WindowsEnum.h"
+#include "ProcessModel.h"
 #include <list>
 
 
-Controller::Controller()
-{
-	CloseObserver closeOb(model, *this);
-}
 
 
-Controller::~Controller()
-{
-}
+//  
+// Methods
+//  
 
-//Elenco degli oggetti da aggiungere  al model
-void Controller::processAdded(HANDLE processAdded)
+//Metodo di inizializzazione del controller, richiama la enumWindows per fotografare lo stato corrente dei processi attivi
+//Salva l alista dei processi attivi nel model
+bool Controller::Init()
 {
+	WindowsEnum we;
+	we.enum_windows();
+
+	ProcessModel model;
+	model.setProcessesList(we.getData());
 	
-}
 
-//Elenco dei processi da rimuovere dal model
-void Controller::processRemoved(HANDLE processRemoved)
-{
+
+	return false;
 }
