@@ -10,13 +10,20 @@
 HHOOK SysHook;
 HINSTANCE hInst;
 
+Buffer *buffer;
+//Evento di creazione nuovo processo
+HANDLE creation;
+//Evento di distruzione processo
+HANDLE destruction;
+//Evento di focus (processo portato in primo piano)
+HANDLE activation;
+//Evento di ricezione messaggio da rete
+HANDLE network;
 
 
-BOOL APIENTRY DllMain(HANDLE hModule,
-	DWORD  ul_reason_for_call,
-	LPVOID lpReserved
-)
-{
+
+
+BOOL APIENTRY DllMain(HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved){
 	hInst = (HINSTANCE)hModule;
 	return TRUE;
 }
@@ -49,37 +56,10 @@ void savetofile(const char* path, HWND hWnd, char* c) {
 	File.close();
 }
 
-void savetofile2(const char* path, HWND hWnd, char* c, CREATESTRUCT *pcs) {
-	std::fstream File(path, std::ios::app);
-	if (File.is_open())
-	{
-		LPSTR result = NULL;
-		int len = WideCharToMultiByte(CP_UTF8, 0, pcs->lpszName, -1, NULL, 0, 0, 0);
-
-		if (len > 0)
-		{
-			result = new char[len + 1];
-			if (result)
-			{
-				int resLen = WideCharToMultiByte(CP_UTF8, 0, pcs->lpszName, -1, &result[0], len, 0, 0);
-				if (resLen == len)
-				{
-					File << "window has been" << c << hWnd << ", ";
-					File.write(result, len);
-					//File << (pcs->style & WS_CAPTION);
-					File << std::endl;
-				}
-				delete[] result;
-			}
-		}
-	}
-	File.close();
-}
 
 
 LRESULT CALLBACK CBTProc(
-
-	int code,	// hook code
+	int code,		// hook code
 	WPARAM wParam,	// removal flag
 	LPARAM lParam 	// address of structure with message
 )
@@ -94,7 +74,7 @@ LRESULT CALLBACK CBTProc(
 		if (pcs->hwndParent == NULL) { // check if it is a top-level window
 			if (GetWindow(hWnd, GW_OWNER) == NULL && pcs->style & WS_OVERLAPPEDWINDOW) {  // check if it is an unowned window. i think i cannot know if it is visible because hook is called in a moment which the WS_VISIBLE constant has not been set.
 
-				savetofile2("C:\\Users\\dar_w\\Desktop\\report.txt", hWnd, " created: ", pcs);
+				//savetofile2("C:\\Users\\dar_w\\Desktop\\report.txt", hWnd, " created: ", pcs);
 			}
 		}
 	}
@@ -114,8 +94,7 @@ LRESULT CALLBACK CBTProc(
 }
 
 
-LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam,
-	LPARAM lParam)
+LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	char ch;
 	if (((DWORD)lParam & 0x40000000) && (HC_ACTION == nCode))
@@ -153,35 +132,33 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam,
 
 
 LRESULT CALLBACK ShellProc(
-
-	int code,	// hook code
+	int code,		// hook code
 	WPARAM wParam,	// removal flag
-	LPARAM lParam, 	// address of structure with message
-	Buffer buff
+	LPARAM lParam 	// address of structure with message
 )
 {
-
 	CallNextHookEx(SysHook, code, wParam, lParam);
 
 	if (code == HSHELL_WINDOWCREATED)
 	{
+		//@TODO GESTIRE GLI ERRORI IN CASO DI IMPOSSIBILITà A SCRIVERE NEL BUFFER
 		HWND hWnd = (HWND)wParam;
 		if (IsWindowVisible(hWnd)){
-			savetofile("C:\\Users\\David\\Desktop\\report.txt", hWnd, " created: ");
+			(*buffer).Push(hWnd);
+			SetEvent(creation);
 		}
 	}
 	if (code == HSHELL_WINDOWDESTROYED) {
 		HWND hWnd = (HWND)wParam;
-		
-			savetofile("C:\\Users\\David\\Desktop\\report.txt", hWnd, " destroyed: ");
+		(*buffer).Push(hWnd);
+		SetEvent(destruction);
 	}
 	if (code == HSHELL_WINDOWACTIVATED) {
 		HWND hWnd = (HWND)wParam;
-
-		savetofile("C:\\Users\\David\\Desktop\\report.txt", hWnd, " activated: ");
-
-
+		(*buffer).Push(hWnd);
+		SetEvent(activation);
 	}
+
 	return 0;
 }
 
@@ -197,5 +174,13 @@ DllExport void RunStopHook(bool State, HINSTANCE hInstance)
 	else{
 		UnhookWindowsHookEx(SysHook);
 	}
-		
+}
+
+DllExport void SetDllParameters(HANDLE cre, HANDLE destr, HANDLE activ, HANDLE net, Buffer *b)
+{
+	creation = cre;
+	destruction = destr;
+	activation = activ;
+	network = net;
+	buffer = b;
 }

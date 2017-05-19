@@ -4,6 +4,7 @@
 #include "ProcessModel.h"
 #include <list>
 #include <thread>
+#include <iostream>
 
 
 
@@ -74,11 +75,7 @@ void Controller::Run()
 
 	CRITICAL_SECTION CriticalSection;
 	InitializeCriticalSection(&CriticalSection);
-
-
-	// Request ownership of the critical section.
-	EnterCriticalSection(&CriticalSection);
-		
+	
 
 	while (true) {
 
@@ -86,17 +83,36 @@ void Controller::Run()
 
 
 
-		WaitForMultipleObjects();
-
+		DWORD result = WaitForMultipleObjects(
+			4,				// number of handles in array
+			eventArray,			// array of thread handles
+			FALSE,			// wait until one is signaled
+			INFINITE);
+		
+		switch (result)
+		{
+		case 0: //Creation
+			std::cout << "Creata nuova finestra" << std::endl;
+			break;
+		case 1: //Destruction event
+			std::cout << "Chiusa un finestra" << std::endl;
+			break;
+		case 2: //Activation event
+			std::cout << "Focus finestra" << std::endl;
+			break;
+		case 3: //Network event
+			break;
+		default:
+			break;
+		}
+			
+			
 		
 		//gestisco evento 
 
 		//Svuoto il buffer
-
+		
 	}
 
-	// Release ownership of the critical section.
-	LeaveCriticalSection(&CriticalSection);
-	// Release resources used by the critical section object.
-	DeleteCriticalSection(&CriticalSection);
+	
 }

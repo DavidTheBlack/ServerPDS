@@ -1,6 +1,2 @@
-﻿  dllmain.cpp
-c:\users\david\documents\visual studio 2015\projects\serverpds\dll\dllmain.cpp(140): warning C4244: 'argomento': conversione da 'WPARAM' a 'UINT'. Possibile perdita di dati.
-  LINK : C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll.dll non trovato o non compilato dall'ultimo collegamento incrementale; verrà eseguito il collegamento completo
-     Creazione della libreria C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll.lib e dell'oggetto C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll.exp
-  Dll.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll.dll
-  Dll.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll.pdb (Full PDB)
+﻿  Buffer.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\dll\buffer.cpp(31): fatal error C1010: fine file imprevista durante la ricerca dell'intestazione precompilata. Si è omesso di aggiungere '#include "stdafx.h"' all'origine?

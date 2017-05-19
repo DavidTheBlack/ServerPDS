@@ -4,3 +4,5 @@
 // Prototype
 DllExport void RunStopHook(bool State, HINSTANCE hInstance);
 
+DllExport void SetDllParameters(HANDLE, HANDLE, HANDLE, HANDLE, Buffer*);
+

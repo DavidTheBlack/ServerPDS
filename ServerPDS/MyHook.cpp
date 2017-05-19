@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include "MyHook.h"
+#include "Buffer.h"
 
 
 MyHook::MyHook() {
@@ -11,9 +12,12 @@ MyHook::MyHook() {
 	if (!hModule){
 		std::cout << "no module loaded!";
 	}	
-	//Initialization of the pointer
+	//Initialization of the pointer to RunStopHook function
 	RunStopHook = NULL;
 	RunStopHook = (RunStopHookProc*)::GetProcAddress((HMODULE)hModule, "RunStopHook");
+	//Initialization of the pointer to the set dll parameters function
+	SetDllParam = NULL;
+	SetDllParam = (SetDllParameters*)::GetProcAddress((HMODULE)hModule, "SetDllParameters");
 	
 };
 
@@ -38,7 +42,9 @@ int MyHook::Messages() {
 	return (int)msg.wParam; //return the messages
 }
 
-void MyHook::InstallHook() {	
+void MyHook::InstallHook() {
+	//Setto i parametri della nela dll e poi chiamo la funzione di avvio aggancio hook
+	(*SetDllParam)(creation,destruction,activation,network,buffer);
 	(*RunStopHook)(true, GetModuleHandle(0));	
 }
 
@@ -46,20 +52,30 @@ void MyHook::UninstallHook()
 {
 	(*RunStopHook)(false, GetModuleHandle(0));
 	FreeLibrary(hModule);
-	
 
 	std::string path = "C:\\Users\\David\\Desktop\\exit.txt";
 	std::fstream File(path, std::ios::app);
 	File << "Chiuso!";
 	File.close();
 	
-	
-	
-	
 }
+void MyHook::SetParameters(HWND creation, HWND destruction, HWND activation, HWND network, Buffer *b)
+{
+	this->creation = creation;
+	this->destruction = destruction;
+	this->activation = activation;
+	this->network = network;
+	this->buffer = b;
+}
+
+
+
+
 
 //Method used to start monitoring processes 
 int MyHook::StartMonitoringProcesses() {
+
+
 	MyHook::Instance().InstallHook();
 	return MyHook::Instance().Messages();
 }
