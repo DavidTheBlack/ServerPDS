@@ -9,6 +9,20 @@
 
 class Controller
 {
+public: 
+	//Evento di creazione nuovo processo
+	HANDLE creation ;
+	//Evento di distruzione processo
+	HANDLE destruction;
+	//Evento di focus (processo portato in primo piano)
+	HANDLE activation ;
+	//Evento di ricezione messaggio da rete
+	HANDLE network ;
+	//Array eventi da passare a WaitForMultipleObject
+	HANDLE eventArray[4];
+
+
+//METHODS
 public:
 
 
@@ -18,6 +32,12 @@ public:
    * @return bool
    */
 	bool Init();
+
+	/**
+	* Metodo che esegue lanciato durante l'esecuzione del programma.
+	* Metodo di esecuzione di tutti i comandi e controlli
+	*/
+	void Run();
 
 
   /**

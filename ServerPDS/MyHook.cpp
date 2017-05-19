@@ -18,7 +18,7 @@ MyHook::MyHook() {
 };
 
 //Singleton
-	MyHook& MyHook::Instance() {
+MyHook& MyHook::Instance() {
 		static MyHook myHook;
 		return myHook;
 	}

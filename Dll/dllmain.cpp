@@ -5,6 +5,7 @@
 #include <fstream>
 #include <Strsafe.h>
 #include "dll.h"
+#include "Buffer.h"
 
 HHOOK SysHook;
 HINSTANCE hInst;
@@ -155,7 +156,8 @@ LRESULT CALLBACK ShellProc(
 
 	int code,	// hook code
 	WPARAM wParam,	// removal flag
-	LPARAM lParam 	// address of structure with message
+	LPARAM lParam, 	// address of structure with message
+	Buffer buff
 )
 {
 
