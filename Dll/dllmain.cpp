@@ -4,21 +4,18 @@
 #include <iostream>
 #include <fstream>
 #include <Strsafe.h>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include "../ServerPDS/MsgQueue.h"
 #include "dll.h"
-#include "Buffer.h"
+
+
 
 HHOOK SysHook;
 HINSTANCE hInst;
 
-Buffer *buffer;
-//Evento di creazione nuovo processo
-HANDLE creation;
-//Evento di distruzione processo
-HANDLE destruction;
-//Evento di focus (processo portato in primo piano)
-HANDLE activation;
-//Evento di ricezione messaggio da rete
-HANDLE network;
+MessageQueue* mexQueue;
 
 
 
@@ -29,6 +26,8 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserv
 }
 
 void savetofile(const char* path, HWND hWnd, char* c) {
+	
+	
 	std::fstream File(path, std::ios::app);
 	if (File.is_open())
 	{
@@ -52,6 +51,17 @@ void savetofile(const char* path, HWND hWnd, char* c) {
 				delete[] result;
 			}
 		}
+	}
+	File.close();
+}
+
+void savetofile2(const char* path, MessageQueue* codaMessaggi) {
+
+
+	std::fstream File(path, std::ios::app);
+	if (File.is_open())
+	{
+		File << "Indirizzo coda messaggi" << codaMessaggi << std::endl;
 	}
 	File.close();
 }
@@ -138,34 +148,52 @@ LRESULT CALLBACK ShellProc(
 )
 {
 	CallNextHookEx(SysHook, code, wParam, lParam);
-
+	
+	
+	
 	if (code == HSHELL_WINDOWCREATED)
 	{
 		//@TODO GESTIRE GLI ERRORI IN CASO DI IMPOSSIBILITà A SCRIVERE NEL BUFFER
 		HWND hWnd = (HWND)wParam;
-		if (IsWindowVisible(hWnd)){
-			(*buffer).Push(hWnd);
-			SetEvent(creation);
-		}
+		savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Created");
+		/*if (IsWindowVisible(hWnd)){*/
+			EventInfo eventInfo;
+			eventInfo.processHandle = hWnd;
+			eventInfo.eventTriggered = HSHELL_WINDOWCREATED;
+			savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Prima");
+			std::unique_lock<std::mutex> lock(mexQueue->eventMut);
+			savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Dopo");
+			mexQueue->eventQueue.push(eventInfo);
+			mexQueue->eventCondVar.notify_all();
+			savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "NOTIFICATO");
+		//}
 	}
 	if (code == HSHELL_WINDOWDESTROYED) {
 		HWND hWnd = (HWND)wParam;
-		(*buffer).Push(hWnd);
-		SetEvent(destruction);
+		savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Destroyed");
+		EventInfo eventInfo;
+		eventInfo.processHandle = hWnd;
+		eventInfo.eventTriggered = HSHELL_WINDOWDESTROYED;
+		std::unique_lock<std::mutex> lock(mexQueue->eventMut);
+		mexQueue->eventQueue.push(eventInfo);
+		mexQueue->eventCondVar.notify_all();
 	}
 	if (code == HSHELL_WINDOWACTIVATED) {
 		HWND hWnd = (HWND)wParam;
-		(*buffer).Push(hWnd);
-		SetEvent(activation);
+		savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Activated");
+		EventInfo eventInfo;
+		eventInfo.processHandle = hWnd;
+		eventInfo.eventTriggered = HSHELL_WINDOWACTIVATED;
+		std::unique_lock<std::mutex> lock(mexQueue->eventMut);
+		mexQueue->eventQueue.push(eventInfo);
+		mexQueue->eventCondVar.notify_all();
 	}
 
 	return 0;
 }
 
 
-
-
-///////////////////////////////////////////////////////////////////
+////////////////METODI ESPOSTI DALLA DLL//////////////
 
 DllExport void RunStopHook(bool State, HINSTANCE hInstance)
 {
@@ -176,11 +204,9 @@ DllExport void RunStopHook(bool State, HINSTANCE hInstance)
 	}
 }
 
-DllExport void SetDllParameters(HANDLE cre, HANDLE destr, HANDLE activ, HANDLE net, Buffer *b)
+DllExport void SetDllMessageQueue( MessageQueue* codaMessaggi)
 {
-	creation = cre;
-	destruction = destr;
-	activation = activ;
-	network = net;
-	buffer = b;
+	mexQueue =codaMessaggi;
+	savetofile2("C:\\Users\\David\\Desktop\\test.txt", codaMessaggi);
+
 }

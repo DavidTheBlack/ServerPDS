@@ -1,4 +1,6 @@
-#pragma once
+#ifndef CONTROLLER_H
+#define CONTROLLER_H
+
 
 /**
   * class Controller
@@ -9,21 +11,13 @@
 
 class Controller
 {
-public: 
-	//Evento di creazione nuovo processo
-	HANDLE creation ;
-	//Evento di distruzione processo
-	HANDLE destruction;
-	//Evento di focus (processo portato in primo piano)
-	HANDLE activation ;
-	//Evento di ricezione messaggio da rete
-	HANDLE network ;
-	//Array eventi da passare a WaitForMultipleObject
-	HANDLE eventArray[4];
+	
+private:
+	ProcessModel model;
 
-
-//METHODS
 public:
+
+	MessageQueue messageQueue;
 
 
   /**
@@ -72,5 +66,6 @@ public:
   void MonitorProcesses();
 
 };
+#endif // !CONTROLLER_H
 
 

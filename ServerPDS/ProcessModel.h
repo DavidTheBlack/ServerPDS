@@ -1,4 +1,7 @@
-#pragma once
+#ifndef PROCESSMODEL_H
+#define PROCESSMODEL_H
+
+
 /**
   * class ProcessModel
   * Contiene al suo interno lo stato corrente del server, mantiene le informazioni
@@ -16,7 +19,13 @@ private:
 	//Handler del processo che detiene il focus
 	HWND focusProcess;
 
+
+
 public:
+
+
+
+	
 	/**
 	* Set the value of FocusedProcessPid
 	* Pid del processo che attualmente ha il focus
@@ -65,3 +74,4 @@ public:
 
 };
 
+#endif // !PROCESSMODEL_H

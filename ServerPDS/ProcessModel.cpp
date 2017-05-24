@@ -1,10 +1,10 @@
-#include "ProcessModel.h"
-#include <Windows.h>
+#include "stdafx.h"
 #include <mutex>
+#include <condition_variable>
 #include <list>
-#include <algorithm>
-#include <string>
-#include <vector>
+#include <queue>
+#include <Windows.h>
+#include "ProcessModel.h"
 
 
 

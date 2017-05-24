@@ -36,7 +36,7 @@
     <ClInclude Include="Controller.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="Buffer.h">
+    <ClInclude Include="MsgQueue.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
   </ItemGroup>
@@ -59,7 +59,7 @@
     <ClCompile Include="Controller.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
-    <ClCompile Include="Buffer.cpp">
+    <ClCompile Include="MsgQueue.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>

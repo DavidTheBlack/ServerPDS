@@ -1,9 +1,18 @@
 #include "stdafx.h"
+
 #include <Windows.h>
 #include <iostream>
 #include <fstream>
+#include <queue>
+#include <condition_variable>
+#include <mutex>
+#include <list>
+#include "MsgQueue.h"
+#include "ProcessModel.h"
+
 #include "MyHook.h"
-#include "Buffer.h"
+
+
 
 
 MyHook::MyHook() {
@@ -12,12 +21,12 @@ MyHook::MyHook() {
 	if (!hModule){
 		std::cout << "no module loaded!";
 	}	
-	//Initialization of the pointer to RunStopHook function
+	//Initialization of the pointer to RunStopHook method
 	RunStopHook = NULL;
 	RunStopHook = (RunStopHookProc*)::GetProcAddress((HMODULE)hModule, "RunStopHook");
-	//Initialization of the pointer to the set dll parameters function
-	SetDllParam = NULL;
-	SetDllParam = (SetDllParameters*)::GetProcAddress((HMODULE)hModule, "SetDllParameters");
+	//Initialization of the pointer to the set dll message queue method
+	SetDllMsgQueue = NULL;
+	SetDllMsgQueue = (SetMessageQueueProc*)::GetProcAddress((HMODULE)hModule, "SetDllMessageQueue");
 	
 };
 
@@ -26,7 +35,6 @@ MyHook& MyHook::Instance() {
 		static MyHook myHook;
 		return myHook;
 	}
-
 
 int MyHook::Messages() {
 	while (msg.message != WM_QUIT) { //while we do not close our application
@@ -42,9 +50,23 @@ int MyHook::Messages() {
 	return (int)msg.wParam; //return the messages
 }
 
+//Set the message queue to pass it to the dll
+void MyHook::SetMessageQueue(MessageQueue * msgQue)
+{
+	msgQueue = msgQue;
+	(*SetDllMsgQueue)(msgQueue);
+}
+
+//Method used to start monitoring processes 
+int MyHook::StartMonitoringProcesses() {
+	//TODO GESTIRE CASO IN CUI NON SIA STATA CREATA LA CODA MESSAGGI
+	MyHook::Instance().InstallHook();
+	return MyHook::Instance().Messages();
+}
+
 void MyHook::InstallHook() {
-	//Setto i parametri della nela dll e poi chiamo la funzione di avvio aggancio hook
-	(*SetDllParam)(creation,destruction,activation,network,buffer);
+	//Chiamo la funzione di aggancio hook
+	
 	(*RunStopHook)(true, GetModuleHandle(0));	
 }
 
@@ -59,23 +81,4 @@ void MyHook::UninstallHook()
 	File.close();
 	
 }
-void MyHook::SetParameters(HWND creation, HWND destruction, HWND activation, HWND network, Buffer *b)
-{
-	this->creation = creation;
-	this->destruction = destruction;
-	this->activation = activation;
-	this->network = network;
-	this->buffer = b;
-}
 
-
-
-
-
-//Method used to start monitoring processes 
-int MyHook::StartMonitoringProcesses() {
-
-
-	MyHook::Instance().InstallHook();
-	return MyHook::Instance().Messages();
-}

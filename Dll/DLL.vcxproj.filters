@@ -27,18 +27,12 @@
     <ClInclude Include="dll.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="Buffer.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
-    <ClCompile Include="Buffer.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>
