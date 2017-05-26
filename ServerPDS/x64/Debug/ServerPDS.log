@@ -1,11 +1,3 @@
-﻿  WindowsEnum.cpp
-  MyHook.cpp
-  stdafx.cpp
-  ServerPDS.cpp
-  ProcessModel.cpp
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.cpp(37): warning C4267: 'return': conversione da 'size_t' a 'int'. Possibile perdita di dati.
-  MsgQueue.cpp
-  Controller.cpp
-  Generazione del codice in corso...
+﻿  Controller.cpp
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.exe
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.pdb (Full PDB)

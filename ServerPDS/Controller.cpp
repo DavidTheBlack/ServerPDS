@@ -28,9 +28,9 @@ bool Controller::Init()
 	WindowsEnum we;
 	we.enum_windows();
 	model.setProcessesList(we.getData());
-	//Setto la message queue da usare per le comunicazioni con la dll
+
 	
-	MyHook::Instance().SetMessageQueue(&messageQueue);
+	
 	
 
 	//@TODO gestire gli errori
@@ -57,7 +57,7 @@ bool Controller::MakeSlot(LPTSTR lpszSlotName)
 
 
 
-BOOL Controller::ReadSlot()
+bool Controller::ReadSlot()
 {
 	DWORD cbMessage, cMessage, cbRead;
 	BOOL fResult;
@@ -78,13 +78,13 @@ BOOL Controller::ReadSlot()
 	if (!fResult)
 	{
 		printf("GetMailslotInfo failed with %d.\n", GetLastError());
-		return FALSE;
+		return false;
 	}
 
 	if (cbMessage == MAILSLOT_NO_MESSAGE)
 	{
 		printf("Waiting for a message...\n");
-		return TRUE;
+		return true;
 	}
 
 	cAllMessages = cMessage;
@@ -141,10 +141,10 @@ BOOL Controller::ReadSlot()
 		if (!fResult)
 		{
 			printf("GetMailslotInfo failed (%d)\n", GetLastError());
-			return FALSE;
+			return false;
 		}
 	}
-	return TRUE;
+	return true;
 }
 
 

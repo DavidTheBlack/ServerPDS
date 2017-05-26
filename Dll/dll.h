@@ -4,5 +4,5 @@
 // Prototype
 DllExport void RunStopHook(bool State, HINSTANCE hInstance);
 
-DllExport void SetDllMessageQueue(MessageQueue*);
+
 

@@ -36,7 +36,7 @@ public:
 
 	bool MakeSlot(LPTSTR lpszSlotName);
 
-	BOOL ReadSlot();
+	bool ReadSlot();
 
 	/**
 	* Metodo che esegue lanciato durante l'esecuzione del programma.
