@@ -15,6 +15,13 @@ class Controller
 private:
 	ProcessModel model;
 
+	HANDLE hSlot;
+	LPTSTR Slot = TEXT("\\\\.\\mailslot\\ms1");
+
+
+
+
+
 public:
 
 	MessageQueue messageQueue;
@@ -26,6 +33,10 @@ public:
    * @return bool
    */
 	bool Init();
+
+	bool MakeSlot(LPTSTR lpszSlotName);
+
+	BOOL ReadSlot();
 
 	/**
 	* Metodo che esegue lanciato durante l'esecuzione del programma.

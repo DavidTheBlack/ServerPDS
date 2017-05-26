@@ -67,7 +67,8 @@ int MyHook::StartMonitoringProcesses() {
 void MyHook::InstallHook() {
 	//Chiamo la funzione di aggancio hook
 	
-	(*RunStopHook)(true, GetModuleHandle(0));	
+	(*RunStopHook)(true, GetModuleHandle(0));
+	
 }
 
 void MyHook::UninstallHook()

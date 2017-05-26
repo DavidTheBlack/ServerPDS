@@ -7,6 +7,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <sstream>
 #include "../ServerPDS/MsgQueue.h"
 #include "dll.h"
 
@@ -14,9 +15,8 @@
 
 HHOOK SysHook;
 HINSTANCE hInst;
-
 MessageQueue* mexQueue;
-
+HANDLE hand = NULL;
 
 
 
@@ -55,7 +55,7 @@ void savetofile(const char* path, HWND hWnd, char* c) {
 	File.close();
 }
 
-void savetofile2(const char* path, MessageQueue* codaMessaggi) {
+void savetofile2(const char* path, HANDLE codaMessaggi) {
 
 
 	std::fstream File(path, std::ios::app);
@@ -146,8 +146,9 @@ LRESULT CALLBACK ShellProc(
 	WPARAM wParam,	// removal flag
 	LPARAM lParam 	// address of structure with message
 )
-{
-	CallNextHookEx(SysHook, code, wParam, lParam);
+{	
+
+	HANDLE evento0= OpenEvent(EVENT_ALL_ACCESS,FALSE,L"Evento");
 	
 	
 	
@@ -155,50 +156,75 @@ LRESULT CALLBACK ShellProc(
 	{
 		//@TODO GESTIRE GLI ERRORI IN CASO DI IMPOSSIBILITà A SCRIVERE NEL BUFFER
 		HWND hWnd = (HWND)wParam;
-		savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Created");
-		/*if (IsWindowVisible(hWnd)){*/
+		
+		if (IsWindowVisible(hWnd)){
 			EventInfo eventInfo;
 			eventInfo.processHandle = hWnd;
 			eventInfo.eventTriggered = HSHELL_WINDOWCREATED;
-			savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Prima");
-			std::unique_lock<std::mutex> lock(mexQueue->eventMut);
-			savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Dopo");
-			mexQueue->eventQueue.push(eventInfo);
-			mexQueue->eventCondVar.notify_all();
-			savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "NOTIFICATO");
-		//}
+			
+			//Salvo handle del processo come stringa
+			std::wstringstream ssTmp;
+			
+			std::wstring stringHandle;
+			ssTmp << hWnd;
+			ssTmp >> stringHandle;
+
+			std::wstring mex;
+			mex = mex + stringHandle+ L"|" + L"FinestraCreata";
+
+
+			//INVIAMO AL MAILSLOT
+
+			DWORD cbWritten;
+			LPTSTR Slot = TEXT("\\\\.\\mailslot\\ms1");
+			HANDLE hSlot = CreateFile(Slot, GENERIC_WRITE,
+				FILE_SHARE_READ,
+				(LPSECURITY_ATTRIBUTES)NULL,
+				OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+				(HANDLE)NULL);
+
+			LPTSTR lpszMessage = TEXT("Fanculo funziona");
+
+			BOOL fResult = WriteFile(hSlot, lpszMessage,
+				(DWORD)(lstrlen(lpszMessage) + 1) * sizeof(TCHAR),
+				&cbWritten, (LPOVERLAPPED)NULL);
+			SetEvent(evento0);
+
+
+			/////////////////////
+
+		}
 	}
 	if (code == HSHELL_WINDOWDESTROYED) {
 		HWND hWnd = (HWND)wParam;
-		savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Destroyed");
 		EventInfo eventInfo;
 		eventInfo.processHandle = hWnd;
 		eventInfo.eventTriggered = HSHELL_WINDOWDESTROYED;
-		std::unique_lock<std::mutex> lock(mexQueue->eventMut);
+		/*std::unique_lock<std::mutex> lock(mexQueue->eventMut);
 		mexQueue->eventQueue.push(eventInfo);
-		mexQueue->eventCondVar.notify_all();
+		mexQueue->eventCondVar.notify_all();*/
 	}
 	if (code == HSHELL_WINDOWACTIVATED) {
-		HWND hWnd = (HWND)wParam;
-		savetofile("C:\\Users\\David\\Desktop\\test.txt", hWnd, "Activated");
+		HWND hWnd = (HWND)wParam;		
 		EventInfo eventInfo;
 		eventInfo.processHandle = hWnd;
 		eventInfo.eventTriggered = HSHELL_WINDOWACTIVATED;
-		std::unique_lock<std::mutex> lock(mexQueue->eventMut);
+		/*std::unique_lock<std::mutex> lock(mexQueue->eventMut);
 		mexQueue->eventQueue.push(eventInfo);
-		mexQueue->eventCondVar.notify_all();
+		mexQueue->eventCondVar.notify_all();*/
 	}
 
-	return 0;
+	return CallNextHookEx(SysHook, code, wParam, lParam);;
 }
 
 
 ////////////////METODI ESPOSTI DALLA DLL//////////////
 
 DllExport void RunStopHook(bool State, HINSTANCE hInstance)
-{
-	if (State)
-		SysHook = SetWindowsHookEx(WH_SHELL, &ShellProc, hInst, 0);
+{	
+	if (State){
+		SysHook = SetWindowsHookEx(WH_SHELL, &ShellProc, hInst, 0);		
+	}
 	else{
 		UnhookWindowsHookEx(SysHook);
 	}
@@ -207,6 +233,6 @@ DllExport void RunStopHook(bool State, HINSTANCE hInstance)
 DllExport void SetDllMessageQueue( MessageQueue* codaMessaggi)
 {
 	mexQueue =codaMessaggi;
-	savetofile2("C:\\Users\\David\\Desktop\\test.txt", codaMessaggi);
+
 
 }
