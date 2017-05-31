@@ -150,7 +150,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Controller.h" />
-    <ClInclude Include="MsgQueue.h" />
     <ClInclude Include="MyHook.h" />
     <ClInclude Include="ProcessModel.h" />
     <ClInclude Include="stdafx.h" />
@@ -159,7 +158,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Controller.cpp" />
-    <ClCompile Include="MsgQueue.cpp" />
     <ClCompile Include="ProcessModel.cpp" />
     <ClCompile Include="ServerPDS.cpp" />
     <ClCompile Include="stdafx.cpp" />

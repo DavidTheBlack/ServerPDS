@@ -31,7 +31,7 @@ public:
 	* Pid del processo che attualmente ha il focus
 	* @param new_var the new value of FocusedProcessPid
 	*/
-	void setFocusedProcess(HWND process);
+	bool setFocusedProcess(HWND process);
 
 	/**
 	* Get the value of FocusedProcessPid

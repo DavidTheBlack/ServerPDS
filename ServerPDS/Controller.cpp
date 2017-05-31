@@ -2,13 +2,13 @@
 #include <thread>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <list>
 #include <mutex>
 #include <Windows.h>
 #include <queue>
 #include <fstream>
 #include <strsafe.h>
-#include "MsgQueue.h"
 #include "WindowsEnum.h"
 #include "MyHook.h"
 #include "ProcessModel.h"
@@ -28,6 +28,7 @@ bool Controller::Init()
 	WindowsEnum we;
 	we.enum_windows();
 	model.setProcessesList(we.getData());
+	
 
 	
 	
@@ -38,7 +39,7 @@ bool Controller::Init()
 }
 
 
-
+//Create the mail slot to pass the information from the dll
 bool Controller::MakeSlot(LPTSTR lpszSlotName)
 {
 	hSlot = CreateMailslot(lpszSlotName,
@@ -51,20 +52,16 @@ bool Controller::MakeSlot(LPTSTR lpszSlotName)
 		printf("CreateMailslot failed with %d\n", GetLastError());
 		return FALSE;
 	}
-	else printf("Mailslot created successfully.\n");
 	return TRUE;
 }
 
-
-
+//Read the mail slot and return all the messages readed in a string vector
 bool Controller::ReadSlot()
 {
 	DWORD cbMessage, cMessage, cbRead;
 	BOOL fResult;
 	LPTSTR lpszBuffer;
-	TCHAR achID[80];
 	DWORD cAllMessages;
-
 
 	cbMessage = cMessage = cbRead = 0;
 	
@@ -77,13 +74,16 @@ bool Controller::ReadSlot()
 
 	if (!fResult)
 	{
-		printf("GetMailslotInfo failed with %d.\n", GetLastError());
+		//@TODO scrivere gli errori in un file di log
+		/*printf("GetMailslotInfo failed with %d.\n", GetLastError());*/ 
+		
 		return false;
 	}
 
+
+	//Se il mailslot non ha messaggi in coda esco dal metodo e ritorno true
 	if (cbMessage == MAILSLOT_NO_MESSAGE)
 	{
-		printf("Waiting for a message...\n");
 		return true;
 	}
 
@@ -91,20 +91,12 @@ bool Controller::ReadSlot()
 
 	while (cMessage != 0)  // retrieve all messages
 	{
-		// Create a message-number string. 
-
-		StringCchPrintf((LPTSTR)achID,
-			80,
-			TEXT("\nMessage #%d of %d\n"),
-			cAllMessages - cMessage + 1,
-			cAllMessages);
-
+	
 		// Allocate memory for the message. 
-
-		lpszBuffer = (LPTSTR)GlobalAlloc(GPTR,
-			lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage);
+		lpszBuffer = (LPTSTR)GlobalAlloc(GPTR, cbMessage);
 		if (NULL == lpszBuffer)
-			return FALSE;
+			return FALSE;	
+
 		lpszBuffer[0] = '\0';
 
 		fResult = ReadFile(hSlot,
@@ -115,41 +107,65 @@ bool Controller::ReadSlot()
 
 		if (!fResult)
 		{
-			printf("ReadFile failed with %d.\n", GetLastError());
+			//TODO SCRIVERE IL MESSAGGIO IN UN FILE DI LOG
+			//printf("ReadFile failed with %d.\n", GetLastError());
 			GlobalFree((HGLOBAL)lpszBuffer);
 			return FALSE;
 		}
 
-		// Concatenate the message and the message-number string. 
-
-		StringCbCat(lpszBuffer,
-			lstrlen((LPTSTR)achID) * sizeof(TCHAR) + cbMessage,
-			(LPTSTR)achID);
-
-		// Display the message. 
-
-		_tprintf(TEXT("Contents of the mailslot: %s\n"), lpszBuffer);
+		
+		// Save the message into the messageList. 
+		std::wstring mex(lpszBuffer);
+		messageQueue.push(mex);
 
 		GlobalFree((HGLOBAL)lpszBuffer);
 
-		fResult = GetMailslotInfo(hSlot,  // mailslot handle 
-			(LPDWORD)NULL,               // no maximum message size 
-			&cbMessage,                   // size of next message 
-			&cMessage,                    // number of messages 
-			(LPDWORD)NULL);              // no read time-out 
+
+		//Check if there are other messages in the mailSlot
+		fResult = GetMailslotInfo(hSlot,	// mailslot handle 
+			(LPDWORD)NULL,					// no maximum message size 
+			&cbMessage,						// size of next message 
+			&cMessage,						// number of messages 
+			(LPDWORD)NULL);					// no read time-out 
 
 		if (!fResult)
 		{
-			printf("GetMailslotInfo failed (%d)\n", GetLastError());
+			//@TODO scrivere il messaggio di errore in un file di log
+			//printf("GetMailslotInfo failed (%d)\n", GetLastError()); 
 			return false;
 		}
-	}
+	}	
 	return true;
 }
 
+//Extrapolate the event info and process handle from the message stored in the message queue
+Controller::Handle_Event_Str Controller::MessageToHandle_Event_Struct(std::wstring message)
+{
+	Handle_Event_Str hwndEventInfo;
+
+	std::wstringstream ss(message);
+	std::wstring vec[2]; //vettore che contiene hwnd del processo (prima posizione) ed evento relativo (seconda posizione)	
+	int i = 0;
+	while (ss.good() && i<2) {
+		ss >> vec[i];
+		++i;
+	}	
+
+	std::wstring hwndString = vec[0];	//handle processo che ha generato evento
+	std::wstring eventTypeStr = vec[1];	//evento generato dal processo 				
+
+	//Converto la stringa in hwnd										
+	intptr_t hwndAddress;
+	std::wstringstream ssTemp;
+	ssTemp << std::hex << hwndString;
+	ssTemp >> hwndAddress;
+	hwndEventInfo.hWnd = reinterpret_cast<HWND>(hwndAddress);
+
+	hwndEventInfo.eventType = std::stoi(eventTypeStr);
 
 
-
+	return hwndEventInfo;
+}
 
 void Controller::Run()
 {
@@ -164,35 +180,9 @@ void Controller::Run()
 	//Creo il mailslot
 	MakeSlot(Slot);
 
-	std::thread hookThread{ &MyHook::StartMonitoringProcesses,&MyHook::Instance() };
+	std::thread hookThread{ &MyHook::StartMonitoringProcesses,&myHookObj };
 
 	
-	
-	//std::unique_lock<std::mutex> lock(messageQueue.eventMut);
-	////GESTIONE DEGLI EVENTI CHE VENGONO SCRITI NELLA MESSAGE QUEUE
-	//while (true) {
-	//	std::cout << "Indirizzo MessageQueue:" << &messageQueue << std::endl;
-	//	messageQueue.eventCondVar.wait(lock);
-	//	std::cout << "tornati dalla condition variable " << std::endl;
-	//	lock.unlock();
-	//	while (true) {
-	//		lock.lock();
-	//		if (messageQueue.eventQueue.empty()) {
-	//			break;
-	//		}
-	//		else {
-	//			std::cout << "Processo: " << messageQueue.eventQueue.front().processHandle << " evento: " << messageQueue.eventQueue.front().eventTriggered << std::endl;
-	//			messageQueue.eventQueue.pop();
-	//		}
-	//		lock.unlock();
-	//	}
-	//	
-	//
-	//	
-	//	//todo implementare le ricezioni dei dati dai thread e azioni da intraprendere
-
-	//	
-	//}
 
 	while (true) {
 		
@@ -200,10 +190,51 @@ void Controller::Run()
 		WaitForSingleObject(evento0, INFINITE);
 
 		//LEGGO LA MAIL SLOT
-		ReadSlot();
+		if (ReadSlot()) {
+			while (messageQueue.size()) {						
+				Controller::Handle_Event_Str info;
+				//Estrapolo informazioni dalla message queue
+				info=MessageToHandle_Event_Struct(messageQueue.front());
+				
+				//Message elaboration
+				//Processo creato eventType==1
+				if(info.eventType==1) {
+					std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato" << info.eventType << std::endl;
+					if (!model.addProcess(info.hWnd)) {
+						//@TODO sollevare eccezione impossibilità inserire dato nel model
+					}
+					//@TODO inviare dato al client
+
+				}
+				//Processo eliminato eventType==2
+				else if (info.eventType == 2) {
+					std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto " << info.eventType << std::endl;
+					if (!model.removeProcess(info.hWnd)) {
+						//@TODO sollevare eccezione impossibilità inserire dato nel model
+					}
+					//@TODO inviare dato al client
+				}
+				//Processo ha focus eventType==3
+				else if (info.eventType == 3) {
+					std::wcout << "Il processo con Handle: " << info.hWnd << " prese fiamme" << info.eventType << std::endl;
+					if (!model.setFocusedProcess(info.hWnd)) {
+						//@TODO sollevare eccezione impossibilità settare focus
+					}
+				//@TODO inviare dato al client
+				}
+				//Delete the top element of the queue
+				messageQueue.pop();				
+			}
 		}
+		else {
+			//@TODO gestire caso di errore
+		}
+
+
+
+	}
 	
 
 	
-	//hookThread.join();
+	//hookThread.join(); va messo?
 }

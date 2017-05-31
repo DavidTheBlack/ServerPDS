@@ -18,13 +18,28 @@ private:
 	HANDLE hSlot;
 	LPTSTR Slot = TEXT("\\\\.\\mailslot\\ms1");
 
+	//Vector of the messages readed from the mailSlot
+	std::queue<std::wstring> messageQueue;
 
+	//Hook object
+	MyHook myHookObj;
+	
+	/*Metodi per gestione mailslot di windows per comunicazione con dll*/
+	bool MakeSlot(LPTSTR lpszSlotName);
+
+	bool ReadSlot();
+
+	typedef struct Handle_Event_Struct {
+		HWND hWnd;
+		int eventType;
+	}Handle_Event_Str;
+
+	//Extrapolate informazion abount event and handle from the message in the message queue 
+	Handle_Event_Str MessageToHandle_Event_Struct(std::wstring);
 
 
 
 public:
-
-	MessageQueue messageQueue;
 
 
   /**
@@ -34,9 +49,7 @@ public:
    */
 	bool Init();
 
-	bool MakeSlot(LPTSTR lpszSlotName);
-
-	bool ReadSlot();
+	
 
 	/**
 	* Metodo che esegue lanciato durante l'esecuzione del programma.

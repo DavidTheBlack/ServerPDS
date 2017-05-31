@@ -90,42 +90,6 @@ bool WriteSlot(HANDLE hSlot, LPCTSTR lpszMessage)
 }
 
 
-LRESULT CALLBACK CBTProc(
-	int code,		// hook code
-	WPARAM wParam,	// removal flag
-	LPARAM lParam 	// address of structure with message
-)
-{
-
-	CallNextHookEx(SysHook, code, wParam, lParam);
-
-	if (code == HCBT_CREATEWND)
-	{
-		CREATESTRUCT *pcs = ((CBT_CREATEWND *)lParam)->lpcs;
-		HWND hWnd = (HWND)wParam;
-		if (pcs->hwndParent == NULL) { // check if it is a top-level window
-			if (GetWindow(hWnd, GW_OWNER) == NULL && pcs->style & WS_OVERLAPPEDWINDOW) {  // check if it is an unowned window. i think i cannot know if it is visible because hook is called in a moment which the WS_VISIBLE constant has not been set.
-
-				//savetofile2("C:\\Users\\dar_w\\Desktop\\report.txt", hWnd, " created: ", pcs);
-			}
-		}
-	}
-	/*if (code == HSHELL_WINDOWDESTROYED) {
-		HWND hWnd = (HWND)wParam;
-
-		savetofile("C:\\Users\\dar_w\\Desktop\\report.txt", hWnd, " destroyed: ");
-	}
-	if (code == HSHELL_WINDOWACTIVATED) {
-		HWND hWnd = (HWND)wParam;
-
-		savetofile("C:\\Users\\dar_w\\Desktop\\report.txt", hWnd, " activated: ");
-
-
-	}*/
-	return 0;
-}
-
-
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	char ch;
@@ -190,19 +154,20 @@ LRESULT CALLBACK ShellProc(
 	
 
 	//Salviamo il tipo di evento lanciato nella variabile eventString
+	//Il token di separazione della stringa è lo spazio " " per questo prima del tipo di evento c'è uno spazio!
 	if (code == HSHELL_WINDOWCREATED)
 	{		
 		if (IsWindowVisible(hWnd)){
-			eventString = L"|Created";
+			eventString = L" 1";
 			sendMessage = true;
 		}
 	}
 	if (code == HSHELL_WINDOWDESTROYED) {
-		eventString = L"|Destroyed";			
+		eventString = L" 2";			
 		sendMessage = true;
 	}
 	if (code == HSHELL_WINDOWACTIVATED) {
-		eventString = L"|Focused";		
+		eventString = L" 3";		
 		sendMessage = true;
 	}
 

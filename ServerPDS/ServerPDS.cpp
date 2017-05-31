@@ -7,9 +7,8 @@
 #include <string>
 #include <list>
 #include <mutex>
-#include <condition_variable>
 #include <queue>
-#include "MsgQueue.h"
+#include <condition_variable>
 #include "MyHook.h"
 #include "ProcessModel.h"
 #include "Controller.h"
@@ -17,7 +16,7 @@
 
 
 int _tmain(int argc, _TCHAR* argv[]) {
-	MyHook::Instance();
+
 	Controller controller;
 	controller.Init();
 	controller.Run();

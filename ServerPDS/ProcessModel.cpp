@@ -2,7 +2,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <list>
-#include <queue>
+
 #include <Windows.h>
 #include "ProcessModel.h"
 
@@ -13,10 +13,16 @@
   * Pid del processo che attualmente ha il focus
   * @param new_var the new value of FocusedProcessPid
   */
-  void ProcessModel::setFocusedProcess(HWND process) {
+  bool ProcessModel::setFocusedProcess(HWND processHwnd) {	 	
 	  std::lock_guard<std::mutex> l(mut);
-	  focusProcess = process;
-	  return;
+	  std::list<HWND>::iterator it;
+	  it = std::find(processesList.begin(), processesList.end(), processHwnd);
+	  if (it != processesList.end()) {
+		  //elemento trovato, è possibile assegnargli il focus
+		  focusProcess = processHwnd;
+		  return true;
+	  }
+	  return false;
   }
 
   /**
