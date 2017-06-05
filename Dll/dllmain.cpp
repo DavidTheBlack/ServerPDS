@@ -137,12 +137,12 @@ LRESULT CALLBACK ShellProc(
 	bool sendMessage = false;
 
 	HWND hWnd = (HWND)wParam;
-	HANDLE evento0 = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"Evento");
+	HANDLE eventProc = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventX64");
 	//Messaggio che verrà inviato tramite mailslot
 	std::wstring message;
 
-	//Messaggio di evento indica l'evento che è stato sollevato dalla finestra
-	std::wstring eventString;
+	//Informazioni aggiuntive sull'evento 
+	std::wstring infoString;
 	
 	//Salvo handle del processo come stringa
 	std::wstringstream ssTemp;
@@ -158,26 +158,26 @@ LRESULT CALLBACK ShellProc(
 	if (code == HSHELL_WINDOWCREATED)
 	{		
 		if (IsWindowVisible(hWnd)){
-			eventString = L" 1";
+			infoString = L" 1 null";
 			sendMessage = true;
 		}
 	}
 	if (code == HSHELL_WINDOWDESTROYED) {
-		eventString = L" 2";			
+		infoString = L" 2 null";
 		sendMessage = true;
 	}
 	if (code == HSHELL_WINDOWACTIVATED) {
-		eventString = L" 3";		
+		infoString = L" 3 null";
 		sendMessage = true;
 	}
 
 	//Se l'evento è di uno dei 3 tipi elencati sopra (creazione distruzione o focus) allora deve essere inviato il messaggio
 	if (sendMessage) {
 		//Messaggio da inviare tramite mailslot
-		message = handleString + eventString;
+		message = handleString + infoString;
 		//INVIAMO AL MAILSLOT
 		if (WriteSlot(hSlot, message.c_str())) {
-			SetEvent(evento0);
+			SetEvent(eventProc);
 		}
 	}
 	return CallNextHookEx(SysHook, code, wParam, lParam);;

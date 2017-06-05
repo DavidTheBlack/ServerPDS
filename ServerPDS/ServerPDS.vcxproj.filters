@@ -36,12 +36,12 @@
     <ClInclude Include="Controller.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="Network.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>File di origine</Filter>
-    </ClCompile>
-    <ClCompile Include="ServerPDS.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="MyHook.cpp">
@@ -54,6 +54,12 @@
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="Controller.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="Network.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>

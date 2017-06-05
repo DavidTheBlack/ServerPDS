@@ -13,6 +13,7 @@ class Controller
 {
 	
 private:
+	
 	ProcessModel model;
 
 	HANDLE hSlot;
@@ -23,6 +24,10 @@ private:
 
 	//Hook object
 	MyHook myHookObj;
+
+	//Network object
+	Network netObj;
+	
 	
 	/*Metodi per gestione mailslot di windows per comunicazione con dll*/
 	bool MakeSlot(LPTSTR lpszSlotName);
@@ -32,15 +37,26 @@ private:
 	typedef struct Handle_Event_Struct {
 		HWND hWnd;
 		int eventType;
+		std::wstring additionalInfo; //Additional information to deliver to the process
 	}Handle_Event_Str;
 
-	//Extrapolate informazion abount event and handle from the message in the message queue 
+	//Extrapolate information abount event and handle from the mailslot
 	Handle_Event_Str MessageToHandle_Event_Struct(std::wstring);
+
+	//Take decision starting from the message event passed to the controller
+	void ManageEvent(Handle_Event_Str);
 
 
 
 public:
+	//System event
+	HANDLE eventX64;
+	HANDLE eventX86;
+	HANDLE eventNet;
 
+
+
+	Controller();
 
   /**
    * Popola per la prima volta la struttura dati con le finestre aperte, invia i dati
@@ -88,6 +104,10 @@ public:
    * che provvederà ad aggiornare il client
    */
   void MonitorProcesses();
+
+
+
+
 
 };
 #endif // !CONTROLLER_H

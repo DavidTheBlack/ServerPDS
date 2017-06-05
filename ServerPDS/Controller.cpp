@@ -12,7 +12,9 @@
 #include "WindowsEnum.h"
 #include "MyHook.h"
 #include "ProcessModel.h"
+#include "Network.h"
 #include "Controller.h"
+
 
 
 
@@ -21,19 +23,49 @@
 // Methods
 //  
 
+
+Controller::Controller():eventX86(NULL),eventX64(NULL),eventNet(NULL)
+{
+}
+
+
 //Metodo di inizializzazione del controller, richiama la enumWindows per fotografare lo stato corrente dei processi attivi
 //Salva l alista dei processi attivi nel model
 bool Controller::Init()
 {
+
+	//Creo il mailslot
+	MakeSlot(Slot);
+
+	//Event initialization
+	eventX86 = CreateEvent(
+		NULL,               // default security attributes
+		TRUE,               // manual-reset event
+		FALSE,              // initial state is nonsignaled
+		TEXT("eventX86")	// object name
+	);
+
+	eventX64 = CreateEvent(
+		NULL,               // default security attributes
+		TRUE,               // manual-reset event
+		FALSE,              // initial state is nonsignaled
+		TEXT("eventX64")		// object name
+	);
+
+	eventNet = CreateEvent(
+		NULL,               // default security attributes
+		TRUE,               // manual-reset event
+		FALSE,              // initial state is nonsignaled
+		TEXT("eventNet")	// object name
+	);
+
 	WindowsEnum we;
 	we.enum_windows();
 	model.setProcessesList(we.getData());
-	
+	//model.setProcessesList(we.enum_windows().getData());
 
+	netObj.initNetwork("4444");
 	
-	
-	
-
 	//@TODO gestire gli errori
 	return true;
 }
@@ -107,7 +139,7 @@ bool Controller::ReadSlot()
 
 		if (!fResult)
 		{
-			//TODO SCRIVERE IL MESSAGGIO IN UN FILE DI LOG
+			//@TODO SCRIVERE IL MESSAGGIO IN UN FILE DI LOG
 			//printf("ReadFile failed with %d.\n", GetLastError());
 			GlobalFree((HGLOBAL)lpszBuffer);
 			return FALSE;
@@ -138,21 +170,22 @@ bool Controller::ReadSlot()
 	return true;
 }
 
-//Extrapolate the event info and process handle from the message stored in the message queue
+//Extrapolate the event info and process handle from the message stored in the mail slot
 Controller::Handle_Event_Str Controller::MessageToHandle_Event_Struct(std::wstring message)
 {
 	Handle_Event_Str hwndEventInfo;
 
 	std::wstringstream ss(message);
-	std::wstring vec[2]; //vettore che contiene hwnd del processo (prima posizione) ed evento relativo (seconda posizione)	
+	std::wstring vec[3]; //vettore che contiene hwnd del processo (prima posizione) ed evento relativo (seconda posizione)	
 	int i = 0;
-	while (ss.good() && i<2) {
+	while (ss.good() && i<3) {
 		ss >> vec[i];
 		++i;
 	}	
 
-	std::wstring hwndString = vec[0];	//handle processo che ha generato evento
-	std::wstring eventTypeStr = vec[1];	//evento generato dal processo 				
+	std::wstring hwndString = vec[0];				//handle processo che ha generato evento
+	std::wstring eventTypeStr = vec[1];				//evento generato dal processo
+	std::wstring additionalInformation = vec[2];	//Informazioni aggiuntive passate al processo
 
 	//Converto la stringa in hwnd										
 	intptr_t hwndAddress;
@@ -167,27 +200,66 @@ Controller::Handle_Event_Str Controller::MessageToHandle_Event_Struct(std::wstri
 	return hwndEventInfo;
 }
 
+void Controller::ManageEvent(Handle_Event_Str info) {
+	//Message elaboration
+	//Processo creato eventType==1
+	switch (info.eventType)
+	{
+	case 1:		//Processo creato
+		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato" << info.eventType << std::endl;
+		if (!model.addProcess(info.hWnd)) {
+			//@TODO sollevare eccezione impossibilità inserire dato nel model
+		}
+		//@TODO inviare dato al client
+		break;
+	case 2:		//Processo chiuso
+		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto " << info.eventType << std::endl;
+		if (!model.removeProcess(info.hWnd)) {
+			//@TODO sollevare eccezione impossibilità inserire dato nel model
+		}
+		//@TODO inviare dato al client
+		break;
+	case 3:		//Processo ha preso il focus
+		std::wcout << "Il processo con Handle: " << info.hWnd << " prese fiamme" << info.eventType << std::endl;
+		if (!model.setFocusedProcess(info.hWnd)) {
+			//@TODO sollevare eccezione impossibilità settare focus
+		}
+		//@TODO inviare dato al client
+		break;
+	case 4:		//messaggio di rete ricevuto
+		std::cout << "Messaggio di rete ricevuto" << std::endl;
+
+		break;
+
+	default:
+		break;
+	}
+
+
+
+}
+
 void Controller::Run()
 {
 
-	HANDLE evento0 = CreateEvent(
-		NULL,               // default security attributes
-		TRUE,               // manual-reset event
-		FALSE,              // initial state is nonsignaled
-		TEXT("Evento")		// object name
-	);
-
-	//Creo il mailslot
-	MakeSlot(Slot);
-
-	std::thread hookThread{ &MyHook::StartMonitoringProcesses,&myHookObj };
 
 	
+	std::thread hookThread{ &MyHook::StartMonitoringProcesses,&myHookObj };
+
+	std::thread netThread{ &Network::receiveMessages, &netObj};
+
+
+
+	//Aggiungere il monitoraggio processi a 32bit
+
+	//Aggiungere il thread di rete
+
 
 	while (true) {
 		
-		ResetEvent(evento0);
-		WaitForSingleObject(evento0, INFINITE);
+		ResetEvent(eventX64);
+		WaitForSingleObject(eventX64, INFINITE); //DA MODIFICARE IN WAITFORMULTIPLEOBJECT
+		// @TODO AGGIUNGERE ANCHE EVENTO PER PROCESSI A 32BIT
 
 		//LEGGO LA MAIL SLOT
 		if (ReadSlot()) {
@@ -196,32 +268,9 @@ void Controller::Run()
 				//Estrapolo informazioni dalla message queue
 				info=MessageToHandle_Event_Struct(messageQueue.front());
 				
-				//Message elaboration
-				//Processo creato eventType==1
-				if(info.eventType==1) {
-					std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato" << info.eventType << std::endl;
-					if (!model.addProcess(info.hWnd)) {
-						//@TODO sollevare eccezione impossibilità inserire dato nel model
-					}
-					//@TODO inviare dato al client
-
-				}
-				//Processo eliminato eventType==2
-				else if (info.eventType == 2) {
-					std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto " << info.eventType << std::endl;
-					if (!model.removeProcess(info.hWnd)) {
-						//@TODO sollevare eccezione impossibilità inserire dato nel model
-					}
-					//@TODO inviare dato al client
-				}
-				//Processo ha focus eventType==3
-				else if (info.eventType == 3) {
-					std::wcout << "Il processo con Handle: " << info.hWnd << " prese fiamme" << info.eventType << std::endl;
-					if (!model.setFocusedProcess(info.hWnd)) {
-						//@TODO sollevare eccezione impossibilità settare focus
-					}
-				//@TODO inviare dato al client
-				}
+				//Manage the event information retrieved from the mailslot
+				ManageEvent(info);
+				
 				//Delete the top element of the queue
 				messageQueue.pop();				
 			}
@@ -229,9 +278,6 @@ void Controller::Run()
 		else {
 			//@TODO gestire caso di errore
 		}
-
-
-
 	}
 	
 

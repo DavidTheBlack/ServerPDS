@@ -1,7 +1,5 @@
-﻿  Controller.cpp
-  Generazione del codice in corso...
-  Compilazione in corso...
-  ServerPDS.cpp
-  Generazione del codice in corso...
+﻿  Network.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\network.cpp(218): warning C4267: 'inizializzazione': conversione da 'size_t' a 'int'. Possibile perdita di dati.
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\network.cpp(220): warning C4267: 'inizializzazione': conversione da 'size_t' a 'int'. Possibile perdita di dati.
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.exe
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.pdb (Full PDB)

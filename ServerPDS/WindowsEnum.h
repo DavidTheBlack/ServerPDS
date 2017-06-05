@@ -2,11 +2,7 @@
 class WindowsEnum
 {
 public:
-
-
 	WindowsEnum& enum_windows();
-
-
 	std::list<HWND>& getData();
 
 private:
