@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <stdint.h>
 #include "Network.h"
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -205,28 +206,85 @@
 
 		// Receive until the peer shuts down the connection or send close connection message
 		do {
-
+			//int total = 0;
+			//int buffIntero=0;
 			iResult = recv(hClientSocket, recvbuf, recvbuflen, 0);
 			if (iResult > 0) {
-				
-				std::string receivedMex= std::string(recvbuf);
 
+				//	//AGGIUNGERE LA RECEIVE CON MESSAGGIO CHE INCLUDE LUNGHEZZA 
+				//	//size del mex che devo leggere dopo
+				//	int size = ntohs(buffIntero);
+				//	int dataLeft = size;
+				//	char* buffer = new char[size];
+				//	while (total<size)
+				//	{
+				//		iResult = recv(hClientSocket, buffer, size, 0);
+				//		total += iResult;
+				//		dataLeft -= iResult;
+				//		std::cout << "Total= " << total << "dataleft= " << dataLeft << std::endl;
+				//	}
+
+
+
+				std::string receivedMex = std::string(recvbuf);
+				receivedMex.erase(iResult);
 				//Accolo i messaggi ricevuti a quelli globali
-				globalBuffer = globalBuffer + receivedMex;
-
-				//ANALISI DEI MESSAGGI RICEVUTI								
-				int headerPos = globalBuffer.find("<s>");
-				//Find the first occurence of the message trailer
-				int trailerPos = globalBuffer.find("<e>");
-
-				currentMessage = globalBuffer.substr(headerPos, trailerPos );
-				currentMessage = currentMessage.substr(3);
+				//globalBuffer = globalBuffer + receivedMex;
 				
-				std::cout << "buffer globale: " << globalBuffer << std::endl;
-				std::cout << "messaggio corrente: " << currentMessage << std::endl;
+				
+				
+				//ANALISI DEI MESSAGGI RICEVUTI								
+				
+				//int headerPos = globalBuffer.find("<M>|");
 
-				globalBuffer.replace(headerPos, trailerPos + 2, "");
-				std::cout << "buffer globale dopo replace: " << globalBuffer << std::endl;
+				//Find the first occurence of the message trailer
+				//int trailerPos = globalBuffer.find("|<E>");
+				
+				//Leggo il numero di byte che ricevero'
+				std::cout << "Received mex: " << receivedMex << std::endl;
+				size_t sz;
+				int size = std::stoi(receivedMex, &sz);
+
+				int total = 0;
+				int dataleft = size;
+
+				char* dataBuff = new char[size];
+
+				std::string totalData;
+				
+				while (total < size) {
+					iResult = recv(hClientSocket, dataBuff, size, 0);
+					total += iResult;
+
+					std::string dataMex = std::string(dataBuff);
+					dataMex.erase(iResult);
+					totalData += dataMex;
+				}
+
+				//Analizzare messaggio ricevuto
+				std::cout << "messaggio ricevuto: " << totalData << std::endl;
+				int tagPos= totalData.find("|");
+				std::string hwndStr = totalData.substr(0, tagPos);
+				std::string keyStr = totalData.substr(tagPos + 1);
+				std::cout << "hwndStr: " << hwndStr<< std::endl;
+				std::cout << "keyStr: " << keyStr<< std::endl;
+
+
+
+
+				/*
+				
+				if ((headerPos != -1) && (trailerPos != -1)) {
+					currentMessage = globalBuffer.substr(headerPos, trailerPos);
+					currentMessage = currentMessage.substr(4);
+
+					std::cout << "buffer globale: " << globalBuffer << std::endl;
+					std::cout << "messaggio corrente: " << currentMessage << std::endl;
+
+					globalBuffer.replace(headerPos, trailerPos + 4, "");
+					std::cout << "buffer globale dopo replace: " << globalBuffer << std::endl;
+				}*/
+
 
 
 
@@ -246,6 +304,7 @@
 					return;
 				}
 			}
+			
 			else if (iResult == 0)
 				printf("Connection closing...\n");
 			
