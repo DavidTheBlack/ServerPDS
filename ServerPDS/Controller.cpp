@@ -19,14 +19,6 @@
 
 
 
-//  
-// Methods
-//  
-
-
-Controller::Controller():eventX86(NULL),eventX64(NULL),eventNet(NULL)
-{
-}
 
 
 //Metodo di inizializzazione del controller, richiama la enumWindows per fotografare lo stato corrente dei processi attivi
@@ -49,22 +41,33 @@ bool Controller::Init()
 		NULL,               // default security attributes
 		TRUE,               // manual-reset event
 		FALSE,              // initial state is nonsignaled
-		TEXT("eventX64")		// object name
+		TEXT("eventX64")	// object name
 	);
 
-	eventNet = CreateEvent(
+	eventRecNet = CreateEvent(
 		NULL,               // default security attributes
 		TRUE,               // manual-reset event
 		FALSE,              // initial state is nonsignaled
-		TEXT("eventNet")	// object name
+		TEXT("eventRecNet")	// object name
 	);
+	eventClientConNet = CreateEvent(
+		NULL,						// default security attributes
+		TRUE,						// manual-reset event
+		FALSE,						// initial state is nonsignaled
+		TEXT("eventClientConNet")	// object name
+	);
+
+	
 
 	WindowsEnum we;
 	we.enum_windows();
 	model.setProcessesList(we.getData());
 	//model.setProcessesList(we.enum_windows().getData());
-
-	netObj.initNetwork("4444");
+	
+	//Trying to start the network
+	if (!netObj.initNetwork("4444")) {
+		std::cout << "Impossibile avviare la connessione di rete" << std::endl;
+	}
 	
 	//@TODO gestire gli errori
 	return true;
@@ -220,14 +223,14 @@ void Controller::ManageEvent(Handle_Event_Str info) {
 		//@TODO inviare dato al client
 		break;
 	case 3:		//Processo ha preso il focus
-		std::wcout << "Il processo con Handle: " << info.hWnd << " prese fiamme" << info.eventType << std::endl;
+		std::wcout << "Il processo con Handle: " << info.hWnd << " ha ottenuto focus" << info.eventType << std::endl;
 		if (!model.setFocusedProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità settare focus
 		}
 		//@TODO inviare dato al client
 		break;
 	case 4:		//messaggio di rete ricevuto
-		std::cout << "Messaggio di rete ricevuto" << std::endl;
+		std::cout << "Processo con handle" << info.hWnd <<"ha ricevuto shortcut: "<< info.additionalInfo.c_str() <<std::endl;
 
 		break;
 
@@ -241,26 +244,29 @@ void Controller::ManageEvent(Handle_Event_Str info) {
 
 void Controller::Run()
 {
-
-
-	
+	//Smithers libera i thread	
 	std::thread hookThread{ &MyHook::StartMonitoringProcesses,&myHookObj };
-
-	std::thread netThread{ &Network::receiveMessages, &netObj};
-
-
-
+	std::thread netThread{ &Network::networkTask, &netObj};
 	//Aggiungere il monitoraggio processi a 32bit
 
 	//Aggiungere il thread di rete
 
-
+	HANDLE events[4];
+	events[0] = eventX86;
+	events[1] = eventX64;
+	events[2] = eventRecNet;
+	events[3] = eventClientConNet;
 	while (true) {
 		
+		//Aggiustare il reset degli eventi e la gestione dei message slot, servirli tutti e resettare tutti gli eventi
+		ResetEvent(eventX86);
 		ResetEvent(eventX64);
-		WaitForSingleObject(eventX64, INFINITE); //DA MODIFICARE IN WAITFORMULTIPLEOBJECT
+		ResetEvent(eventRecNet);
+		ResetEvent(eventClientConNet);
+		//WaitForSingleObject(eventX64, INFINITE); //DA MODIFICARE IN WAITFORMULTIPLEOBJECT
+		WaitForMultipleObjects(4, events, FALSE, INFINITE);
 		// @TODO AGGIUNGERE ANCHE EVENTO PER PROCESSI A 32BIT
-
+		
 		//LEGGO LA MAIL SLOT
 		if (ReadSlot()) {
 			while (messageQueue.size()) {						

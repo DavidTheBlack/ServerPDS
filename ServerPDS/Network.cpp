@@ -2,6 +2,7 @@
 #include <ws2tcpip.h>
 #include <strsafe.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <algorithm>
 #include <stdint.h>
@@ -11,8 +12,9 @@
 
 
 
+
 	
-	Network::Network():iResult(0), hSocket(INVALID_SOCKET), hClientSocket(INVALID_SOCKET) {
+	Network::Network() :iResult(0), hSocket(INVALID_SOCKET), hClientSocket(INVALID_SOCKET), clientConnected(false) {
 		//Windows Mail Slot initialization
 		Slot = TEXT("\\\\.\\mailslot\\ms1");
 		hSlot = CreateFile(Slot, GENERIC_WRITE,
@@ -20,15 +22,20 @@
 			(LPSECURITY_ATTRIBUTES)NULL,
 			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
 			(HANDLE)NULL);
+
+		//Initialize event detail
+		networkMessageRecEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventRecNet");
+		networkClientConnEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventClientConNet");
+
+
+
 	}
 
 	Network::~Network() {
 
 		iResult = shutdown(hClientSocket, SD_SEND);
 		if (iResult == SOCKET_ERROR) {
-			errorShow(TEXT("shutdown"));
-			closesocket(hClientSocket);
-			WSACleanup();
+			errorShow(TEXT("shutdown network connection"));			
 		}
 
 		// cleanup
@@ -36,15 +43,50 @@
 		WSACleanup();
 	}
 
-	//Initialize the socket and start listening for connection
-	bool Network::initNetwork(PCSTR portNumber)
+	bool Network::getConnectionState()
 	{
+		return clientConnected;
+	}
+
+	//Method that will be threaded
+	void Network::networkTask()
+	{
+		
+		if (!receiveMessages()) {
+			std::cout << "Receive message ha restituito un errore" << std::endl;
+			//Se la receive message torna false devo riavviare il socket e accettare nuove connessioni
+			restartNetwork();
+		}
+
+
+	}
+
+	//Initialize the socket and start listening for connection
+	bool Network::initNetwork(std::string portNumber)
+	{
+		portNumberStr = portNumber;
 		if (!startWinsock(2, 2)) return false;
-		if (!startSocket(portNumber)) return false;
+		if (!startSocket(portNumberStr.c_str())) return false;
 		if (!acceptClient()) return false;
 		
 		return true;
-	}	
+	}
+
+	//Reinitialize connection after a network error
+	bool Network::restartNetwork() {
+		if (!startSocket(portNumberStr.c_str())) return false;
+		if (!acceptClient()) return false;
+	}
+
+	//Close connection 
+	void Network::closeConnection()
+	{
+		std::cout << "Chiusura del socket" << std::endl;
+		clientConnected = false;
+		closesocket(hClientSocket);
+		WSACleanup();
+
+	}
 
 	bool Network::startWinsock(BYTE majorVersion, BYTE minorVersion) {
 
@@ -136,14 +178,146 @@
 		hClientSocket = accept(hSocket, NULL, NULL);
 		if (hClientSocket == INVALID_SOCKET) {
 			errorShow(TEXT("accept"));
-			closesocket(hSocket);
-			WSACleanup();
+			closeConnection();
 			return false;
 		}
+
 		std::cout << "Client connesso" << std::endl;
-		//closesocket(hSocket);
+		closesocket(hSocket);
+		clientConnected = true;
+		SetEvent(networkClientConnEvent);
 		return true;
 	}
+
+	//Method that receives network messages and communicates them to the controller
+	bool Network::receiveMessages()
+	{		
+		/*char recvbuf[DEFAULT_BUFLEN];
+		int recvbuflen = DEFAULT_BUFLEN;*/
+		int iSendResult;
+		int iResult;
+		////Coda dei messaggi globali;
+		//std::string globalBuffer;
+
+		////Messaggio correntemente analizzato 
+		//std::string currentMessage;
+
+		// Receive until the peer shuts down the connection or send close connection message
+		do {			
+			int idx = 0;			
+			uint32_t varSize;
+			iResult = recv(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
+			if (iResult == SOCKET_ERROR) {
+				//Gestione errore
+				printf("recv failed with error: %d\n", WSAGetLastError());
+				closeConnection();
+				return false;	//ritorno dalla funzione di ricezione con errore
+			}
+
+
+			uint32_t nLeft = varSize;
+			char *recvbuf = new char[varSize];
+			/*char *prova2 = new char[2];
+			char *prova3 = new char[3];
+			char *prova4 = new char[4];
+			std::cout << "dimensione prova2 ";*/
+
+
+			while (nLeft > 0) {
+				iResult = recv(hClientSocket, (char*)&recvbuf[idx], nLeft, 0);
+				if (iResult == SOCKET_ERROR) {
+					//Gestione errore
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					closeConnection();
+					return false; //ritorno dalla funzione di ricezione con errore
+				}
+				nLeft -= iResult;
+				idx += iResult;
+			}
+			
+
+			//iResult = 0;
+			////First message contains the dimension of the next message
+			//iResult = recv(hClientSocket, recvbuf, recvbuflen, 0);
+			//if (iResult > 0) {				
+			//	std::string receivedMex = std::string(recvbuf);
+			//	receivedMex.erase(iResult);																											
+			//	//Reading the total lenght of te next message								
+			//	int size = std::stoi(receivedMex);
+			//	//Receive the real message
+			//	int total = 0;												//total bytes received
+			//	int dataleft = size;										//left amount of byte that have to be received
+			//	char* dataBuff = new char[size];							//data receiving buffer
+			//	std::string totalDataStr;									//string version of the received buffer
+			//	while (total < size) {
+
+			//		int iResultMessage = recv(hClientSocket, dataBuff, size, 0);
+			//		total += iResultMessage;
+			//		std::string dataMex = std::string(dataBuff);
+			//		dataMex.erase(iResultMessage;)
+			//		totalDataStr += dataMex;
+
+			//	}
+
+				//Received mex analisys
+				//std::cout << "messaggio ricevuto: " << totalDataStr << std::endl;
+				
+				std::string totalDataStr = std::string(recvbuf);
+				totalDataStr.erase(varSize);
+				size_t tagPos= totalDataStr.find("|");
+				std::string pidStr = totalDataStr.substr(0, tagPos);	//First part of the message is the pid of the process
+				std::string keyStr = totalDataStr.substr(tagPos + 1);	//second part of the messa is the shortcut key to send at process
+				std::cout << "pidStr: " << pidStr << std::endl;
+				std::cout << "keyStr: " << keyStr << std::endl;
+				
+				//@TODO GESTIRE IL PASSAGGIO DELLE INFORMAZIONI AL CONTROLLER
+				
+				
+				
+				
+				
+				
+				
+				//std::wstring infoString = std::wstring(pidStr.c_str());
+			
+				//Gestione delle informazioni ricevute, invio dei dati tramite mailslot al controller
+				/*std::string infoMessage= pidStr + " 4 "+keyStr;								
+
+				std::wstring mailSlotMessage;
+				mailSlotMessage.assign(infoMessage.begin(), infoMessage.end());
+				*/
+				
+				//CONVERTIRE DA STRING A WSTRING PER MANDARLO
+				//BRUTTA NOTIZIA MAILSLOT NON PUò ESSERE USATO ALL'INTERNO DELLO STESSO PROCESSO, 
+				//NOI ABBIAMO APERTO LA MAILSLOT MA NON POSSIAMO SCRIVERLA
+				
+				//Send message to mailslot
+				/*if (WriteSlot(hSlot, mailSlotMessage.c_str())) {
+					SetEvent(networkEvent);
+				}
+				else
+				{
+					std::cout << "Errore nella scrittura del mailslot!" << std::endl;
+				}*/
+
+				
+				// Echo the buffer back to the sender
+			iSendResult = send(hClientSocket, recvbuf, iResult, 0);
+			if (iSendResult == SOCKET_ERROR) {
+				printf("send failed with error: %d\n", WSAGetLastError());
+				closeConnection();
+				return false;
+			}			
+			else if (iResult == 0)
+				printf("Connection closing...\n");
+			
+		} while (iResult > 0);
+		
+		return true;
+
+	}
+
+
 
 	void Network::errorShow(LPTSTR lpszFunction)
 	{
@@ -186,138 +360,10 @@
 			&cbWritten, (LPOVERLAPPED)NULL);
 		if (!fResult)
 		{
+			std::cout << "errore in scrittura mailslot: " << GetLastError() << std::endl;
 			return false;
 		}
 		return true;
-	}
-
-	//Method that receives network messages and communicates them to the controller
-	void Network::receiveMessages()
-	{		
-		char recvbuf[DEFAULT_BUFLEN];
-		int recvbuflen = DEFAULT_BUFLEN;
-		int iSendResult;
-
-		//Coda dei messaggi globali;
-		std::string globalBuffer;
-
-		//Messaggio correntemente analizzato 
-		std::string currentMessage;
-
-		// Receive until the peer shuts down the connection or send close connection message
-		do {
-			//int total = 0;
-			//int buffIntero=0;
-			iResult = recv(hClientSocket, recvbuf, recvbuflen, 0);
-			if (iResult > 0) {
-
-				//	//AGGIUNGERE LA RECEIVE CON MESSAGGIO CHE INCLUDE LUNGHEZZA 
-				//	//size del mex che devo leggere dopo
-				//	int size = ntohs(buffIntero);
-				//	int dataLeft = size;
-				//	char* buffer = new char[size];
-				//	while (total<size)
-				//	{
-				//		iResult = recv(hClientSocket, buffer, size, 0);
-				//		total += iResult;
-				//		dataLeft -= iResult;
-				//		std::cout << "Total= " << total << "dataleft= " << dataLeft << std::endl;
-				//	}
-
-
-
-				std::string receivedMex = std::string(recvbuf);
-				receivedMex.erase(iResult);
-				//Accolo i messaggi ricevuti a quelli globali
-				//globalBuffer = globalBuffer + receivedMex;
-				
-				
-				
-				//ANALISI DEI MESSAGGI RICEVUTI								
-				
-				//int headerPos = globalBuffer.find("<M>|");
-
-				//Find the first occurence of the message trailer
-				//int trailerPos = globalBuffer.find("|<E>");
-				
-				//Leggo il numero di byte che ricevero'
-				std::cout << "Received mex: " << receivedMex << std::endl;
-				size_t sz;
-				int size = std::stoi(receivedMex, &sz);
-
-				int total = 0;
-				int dataleft = size;
-
-				char* dataBuff = new char[size];
-
-				std::string totalData;
-				
-				while (total < size) {
-					iResult = recv(hClientSocket, dataBuff, size, 0);
-					total += iResult;
-
-					std::string dataMex = std::string(dataBuff);
-					dataMex.erase(iResult);
-					totalData += dataMex;
-				}
-
-				//Analizzare messaggio ricevuto
-				std::cout << "messaggio ricevuto: " << totalData << std::endl;
-				int tagPos= totalData.find("|");
-				std::string hwndStr = totalData.substr(0, tagPos);
-				std::string keyStr = totalData.substr(tagPos + 1);
-				std::cout << "hwndStr: " << hwndStr<< std::endl;
-				std::cout << "keyStr: " << keyStr<< std::endl;
-
-
-
-
-				/*
-				
-				if ((headerPos != -1) && (trailerPos != -1)) {
-					currentMessage = globalBuffer.substr(headerPos, trailerPos);
-					currentMessage = currentMessage.substr(4);
-
-					std::cout << "buffer globale: " << globalBuffer << std::endl;
-					std::cout << "messaggio corrente: " << currentMessage << std::endl;
-
-					globalBuffer.replace(headerPos, trailerPos + 4, "");
-					std::cout << "buffer globale dopo replace: " << globalBuffer << std::endl;
-				}*/
-
-
-
-
-				/*
-				int tokenPos=receivedMex.find("|");
-				std::wcout << "Token in posizione: " << tokenPos << std::endl;
-				int pidLength = tokenPos - 3;
-				std::string pidString = receivedMex.substr(3, pidLength);
-				std::cout << "PID: " << pidString << std::endl;
-				*/
-				// Echo the buffer back to the sender
-				iSendResult = send(hClientSocket, recvbuf, iResult, 0);
-				if (iSendResult == SOCKET_ERROR) {
-					printf("send failed with error: %d\n", WSAGetLastError());
-					closesocket(hClientSocket);
-					WSACleanup();
-					return;
-				}
-			}
-			
-			else if (iResult == 0)
-				printf("Connection closing...\n");
-			
-			else {
-				printf("recv failed with error: %d\n", WSAGetLastError());
-				closesocket(hClientSocket);
-				WSACleanup();
-				return;
-			}
-
-		} while (iResult > 0);
-
-
 	}
 
 

@@ -1,4 +1,4 @@
 ﻿  Network.cpp
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\network.cpp(266): warning C4267: 'inizializzazione': conversione da 'size_t' a 'int'. Possibile perdita di dati.
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\network.cpp(79): warning C4715: 'Network::restartNetwork': non tutti i percorsi di controllo restituiscono un valore
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.exe
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.pdb (Full PDB)

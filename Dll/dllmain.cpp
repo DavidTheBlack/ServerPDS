@@ -137,7 +137,7 @@ LRESULT CALLBACK ShellProc(
 	bool sendMessage = false;
 
 	HWND hWnd = (HWND)wParam;
-	HANDLE eventProc = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventX64");
+	HANDLE processEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventX64");
 	//Messaggio che verrà inviato tramite mailslot
 	std::wstring message;
 
@@ -177,7 +177,7 @@ LRESULT CALLBACK ShellProc(
 		message = handleString + infoString;
 		//INVIAMO AL MAILSLOT
 		if (WriteSlot(hSlot, message.c_str())) {
-			SetEvent(eventProc);
+			SetEvent(processEvent);
 		}
 	}
 	return CallNextHookEx(SysHook, code, wParam, lParam);;

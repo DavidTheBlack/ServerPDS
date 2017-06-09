@@ -18,10 +18,10 @@
 
 
 int _tmain(int argc, _TCHAR* argv[]) {
-
+	
 	Controller controller;
 	controller.Init();
-	controller.Run();
+	controller.Run();	
 	return 0;
 
 }

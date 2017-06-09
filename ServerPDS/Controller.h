@@ -52,11 +52,12 @@ public:
 	//System event
 	HANDLE eventX64;
 	HANDLE eventX86;
-	HANDLE eventNet;
+	HANDLE eventRecNet;
+	HANDLE eventClientConNet;
 
 
 
-	Controller();
+
 
   /**
    * Popola per la prima volta la struttura dati con le finestre aperte, invia i dati
