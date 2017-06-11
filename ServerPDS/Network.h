@@ -1,8 +1,9 @@
 //Network class that ensure the communication with the client
 //it uses windwos mailslot to communicate with server controller
 
-#pragma once
-#define DEFAULT_BUFLEN 512
+#ifndef NETWORK_H
+#define NETWORK_H
+
 
 class Network
 {
@@ -60,4 +61,5 @@ public:
 
 	
 };
+#endif // !NETWORK_H
 
