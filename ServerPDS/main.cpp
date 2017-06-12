@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include "MyHook.h"
 #include "ProcessModel.h"
+#include "EventInfo.h"
 #include "Network.h"
 #include "Controller.h"
 

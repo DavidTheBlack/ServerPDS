@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Controller.h" />
+    <ClInclude Include="EventInfo.h" />
     <ClInclude Include="MyHook.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="ProcessModel.h" />
@@ -159,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Controller.cpp" />
+    <ClCompile Include="EventInfo.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="ProcessModel.cpp" />
     <ClCompile Include="main.cpp" />

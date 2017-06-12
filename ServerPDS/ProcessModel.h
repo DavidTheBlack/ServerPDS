@@ -13,7 +13,7 @@ class ProcessModel
 
 private:
 	//Struttura dati che contiene le informazioni dei processi sfruttiamo una lista
-	std::list<HWND> processesList;
+	std::list<std::pair<HWND,DWORD>> processesList;
 	//mutex per gestire l'accesso thread safe
 	std::mutex mut;
 	//Handler del processo che detiene il focus
@@ -21,11 +21,7 @@ private:
 
 
 
-public:
-
-
-
-	
+public:	
 	/**
 	* Set the value of FocusedProcessPid
 	* Pid del processo che attualmente ha il focus
@@ -43,13 +39,13 @@ public:
 	/*
 	*Restituisce l'attuale numero di processi memorizzati nella struttura dati
 	*/
-	int getNumberOfProcesses();
+	size_t getNumberOfProcesses();
 
 	/**
 	* Restituisce la struttura dati condivisa processList
-	* @return std::vector<HWND>
+	* @return std::list<std::pair<HWND,DWORD>>
 	*/
-	std::list<HWND> getProcessesList();
+	std::list<std::pair<HWND, DWORD>> getProcessesList();
 
 	/**
 	* Aggiunta safe di un nuovo processo
@@ -57,6 +53,9 @@ public:
 	* @param  processInfo
 	*/
 	bool addProcess(HWND processHwnd);
+
+	/**Restituisce il HWND del processo noto il pid*/
+	HWND pidToHwnd(DWORD pid);
 
 	/**
 	* Aggiunta safe di una lista di processi metodo richiamato alla prima esecuzione di windowsEnum

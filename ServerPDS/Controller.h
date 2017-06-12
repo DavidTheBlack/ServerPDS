@@ -20,7 +20,7 @@ private:
 	LPTSTR Slot = TEXT("\\\\.\\mailslot\\ms1");
 
 	//Vector of the messages readed from the mailSlot
-	std::queue<std::wstring> messageQueue;
+	std::queue<std::wstring> hookMessageQueue;
 
 	//Hook object
 	MyHook myHookObj;
@@ -34,26 +34,23 @@ private:
 
 	bool ReadSlot();
 
-	typedef struct Handle_Event_Struct {
-		HWND hWnd;
-		int eventType;
-		std::wstring additionalInfo; //Additional information to deliver to the process
-	}Handle_Event_Str;
-
 	//Extrapolate information abount event and handle from the mailslot
-	Handle_Event_Str MessageToHandle_Event_Struct(std::wstring);
+	EventInfo MessageToHandle_Event_Struct(std::wstring);
 
 	//Take decision starting from the message event passed to the controller
-	void ManageEvent(Handle_Event_Str);
+	void ManageHookEvent(EventInfo);
 
+	//Take decision starting from network messages
+	void ManageNetworkEvent(EventInfo);
 
 
 public:
 	//System event
 	HANDLE eventX64;
 	HANDLE eventX86;
-	HANDLE eventRecNet;
 	HANDLE eventClientConNet;
+	HANDLE eventRecNet;
+	
 
 
 

@@ -11,14 +11,10 @@
 #include <strsafe.h>
 #include "WindowsEnum.h"
 #include "MyHook.h"
+#include "EventInfo.h"
 #include "ProcessModel.h"
 #include "Network.h"
 #include "Controller.h"
-
-
-
-
-
 
 
 //Metodo di inizializzazione del controller, richiama la enumWindows per fotografare lo stato corrente dei processi attivi
@@ -44,18 +40,20 @@ bool Controller::Init()
 		TEXT("eventX64")	// object name
 	);
 
+	eventClientConNet = CreateEvent(
+		NULL,						// default security attributes
+		TRUE,						// manual-reset event
+		FALSE,						// initial state is nonsignaled
+		TEXT("eventClientConNet")	// object name		
+	);
+
 	eventRecNet = CreateEvent(
 		NULL,               // default security attributes
 		TRUE,               // manual-reset event
 		FALSE,              // initial state is nonsignaled
 		TEXT("eventRecNet")	// object name
 	);
-	eventClientConNet = CreateEvent(
-		NULL,						// default security attributes
-		TRUE,						// manual-reset event
-		FALSE,						// initial state is nonsignaled
-		TEXT("eventClientConNet")	// object name
-	);
+	
 
 	
 
@@ -72,7 +70,6 @@ bool Controller::Init()
 	//@TODO gestire gli errori
 	return true;
 }
-
 
 //Create the mail slot to pass the information from the dll
 bool Controller::MakeSlot(LPTSTR lpszSlotName)
@@ -151,7 +148,7 @@ bool Controller::ReadSlot()
 		
 		// Save the message into the messageList. 
 		std::wstring mex(lpszBuffer);
-		messageQueue.push(mex);
+		hookMessageQueue.push(mex);
 
 		GlobalFree((HGLOBAL)lpszBuffer);
 
@@ -174,9 +171,9 @@ bool Controller::ReadSlot()
 }
 
 //Extrapolate the event info and process handle from the message stored in the mail slot
-Controller::Handle_Event_Str Controller::MessageToHandle_Event_Struct(std::wstring message)
+EventInfo Controller::MessageToHandle_Event_Struct(std::wstring message)
 {
-	Handle_Event_Str hwndEventInfo;
+	EventInfo hwndEventInfo;
 
 	std::wstringstream ss(message);
 	std::wstring vec[3]; //vettore che contiene hwnd del processo (prima posizione) ed evento relativo (seconda posizione)	
@@ -203,43 +200,60 @@ Controller::Handle_Event_Str Controller::MessageToHandle_Event_Struct(std::wstri
 	return hwndEventInfo;
 }
 
-void Controller::ManageEvent(Handle_Event_Str info) {
+void Controller::ManageHookEvent(EventInfo info) {
+
 	//Message elaboration
 	//Processo creato eventType==1
 	switch (info.eventType)
 	{
-	case 1:		//Processo creato
+	case WINDOWCREATED:		//Processo creato
 		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato" << info.eventType << std::endl;
 		if (!model.addProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
 		}
 		//@TODO inviare dato al client
 		break;
-	case 2:		//Processo chiuso
+	case WINDOWCLOSED:		//Processo chiuso
 		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto " << info.eventType << std::endl;
 		if (!model.removeProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
 		}
 		//@TODO inviare dato al client
 		break;
-	case 3:		//Processo ha preso il focus
+	case WINDOWFOCUSED:		//Processo ha preso il focus
 		std::wcout << "Il processo con Handle: " << info.hWnd << " ha ottenuto focus" << info.eventType << std::endl;
 		if (!model.setFocusedProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità settare focus
 		}
 		//@TODO inviare dato al client
 		break;
-	case 4:		//messaggio di rete ricevuto
-		std::cout << "Processo con handle" << info.hWnd <<"ha ricevuto shortcut: "<< info.additionalInfo.c_str() <<std::endl;
-
-		break;
-
+	
 	default:
 		break;
 	}
+	//Reset eventi processi x86 e x64
+	ResetEvent(eventX86);
+	ResetEvent(eventX64);
 
+}
 
-
+void Controller::ManageNetworkEvent(EventInfo netEventInfo)
+{
+	switch (netEventInfo.eventType)
+	{
+	case NETCLIENTCONNECTED:		//Client connesso
+		std::cout << "Client connesso" << std::endl;		
+		ResetEvent(eventClientConNet);
+		break;
+	case NETWORKMESSAGE:		//messaggio di rete ricevuto
+			std::cout << "Processo con PID" << netEventInfo.pid << "ha ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()
+				<< std::endl << "ed ha HANDLE: " << model.pidToHwnd(netEventInfo.pid) <<std::endl;
+			ResetEvent(eventRecNet);
+		break;	
+	default:
+		break;
+	}
+	
 }
 
 void Controller::Run()
@@ -254,39 +268,53 @@ void Controller::Run()
 	HANDLE events[4];
 	events[0] = eventX86;
 	events[1] = eventX64;
-	events[2] = eventRecNet;
-	events[3] = eventClientConNet;
+	events[2] = eventClientConNet;
+	events[3] = eventRecNet;
 	while (true) {
 		
-		//Aggiustare il reset degli eventi e la gestione dei message slot, servirli tutti e resettare tutti gli eventi
-		ResetEvent(eventX86);
-		ResetEvent(eventX64);
-		ResetEvent(eventRecNet);
-		ResetEvent(eventClientConNet);
-		//WaitForSingleObject(eventX64, INFINITE); //DA MODIFICARE IN WAITFORMULTIPLEOBJECT
-		WaitForMultipleObjects(4, events, FALSE, INFINITE);
-		// @TODO AGGIUNGERE ANCHE EVENTO PER PROCESSI A 32BIT
-		
-		//LEGGO LA MAIL SLOT
-		if (ReadSlot()) {
-			while (messageQueue.size()) {						
-				Controller::Handle_Event_Str info;
-				//Estrapolo informazioni dalla message queue
-				info=MessageToHandle_Event_Struct(messageQueue.front());
-				
-				//Manage the event information retrieved from the mailslot
-				ManageEvent(info);
-				
-				//Delete the top element of the queue
-				messageQueue.pop();				
+		DWORD eventRaised= WaitForMultipleObjects(4, events, FALSE, INFINITE);
+		switch (eventRaised)
+		{
+		case 0:	//Eventi 0 ed 1 sollevati sono quelli degli hook
+		case 1: {
+			//LEGGO iL MAIL SLOT
+			if (ReadSlot()) {
+				while (hookMessageQueue.size()) {
+					EventInfo hookEventInfo;
+					//Estrapolo informazioni dalla message queue
+					hookEventInfo = MessageToHandle_Event_Struct(hookMessageQueue.front());
+					//Manage the event information retrieved from the mailslot
+					ManageHookEvent(hookEventInfo);
+					//Delete the top element of the queue
+					hookMessageQueue.pop();
+				}
 			}
-		}
-		else {
-			//@TODO gestire caso di errore
-		}
-	}
-	
+			else {
+				//@TODO gestire caso di errore
+			}
 
-	
+			break;
+		}
+		case 2: {			//Evento connessione client
+			EventInfo netConnEventInfo;
+			netConnEventInfo.eventType = NETCLIENTCONNECTED;
+			ManageNetworkEvent(netConnEventInfo);
+			break;
+		}
+		case 3: {	//Evento ricezione messaggio da client
+				//Controllo se ci sono messaggi di rete
+			while (netObj.getNetworkMessagesNumber() != 0) {
+				EventInfo netEventInfo;
+				netEventInfo = netObj.getNetworkMessage();
+				//Gestisco evento di rete
+				ManageNetworkEvent(netEventInfo);
+			}
+			break;
+		}					
+		default:
+			break;
+		}
+
+	}
 	//hookThread.join(); va messo?
 }

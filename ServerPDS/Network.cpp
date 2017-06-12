@@ -4,8 +4,11 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <queue>
+#include <mutex>
 #include <algorithm>
 #include <stdint.h>
+#include "EventInfo.h"
 #include "Network.h"
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -14,21 +17,8 @@
 
 
 	
-	Network::Network() :iResult(0), hSocket(INVALID_SOCKET), hClientSocket(INVALID_SOCKET), clientConnected(false) {
-		//Windows Mail Slot initialization
-		Slot = TEXT("\\\\.\\mailslot\\ms1");
-		hSlot = CreateFile(Slot, GENERIC_WRITE,
-			FILE_SHARE_READ,
-			(LPSECURITY_ATTRIBUTES)NULL,
-			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
-			(HANDLE)NULL);
-
-		//Initialize event detail
-		networkMessageRecEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventRecNet");
-		networkClientConnEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventClientConnet");
-
-
-
+	Network::Network() :iResult(0), hSocket(INVALID_SOCKET), hClientSocket(INVALID_SOCKET), clientConnected(false) {		
+		
 	}
 
 	Network::~Network() {
@@ -48,6 +38,33 @@
 		return clientConnected;
 	}
 
+	EventInfo Network::getNetworkMessage()
+	{
+		std::lock_guard<std::mutex> l(mut);
+		EventInfo temp;
+		if (MessageQueue.empty()) {
+			temp.additionalInfo = "Empty";
+		}
+		else {			
+			temp = MessageQueue.front();
+			MessageQueue.pop();
+		}
+		return temp;
+	}
+
+	void Network::pushNetworkMessage(EventInfo info)
+	{
+		std::lock_guard<std::mutex> l(mut);
+		MessageQueue.push(info);
+	}
+
+
+	size_t Network::getNetworkMessagesNumber()
+	{
+		std::lock_guard<std::mutex> l(mut);
+		return MessageQueue.size();
+	}
+
 	//Method that will be threaded
 	void Network::networkTask()
 	{
@@ -57,15 +74,17 @@
 				//Se la receive message torna false devo riavviare il socket e accettare nuove connessioni
 				restartNetwork();
 			}
-		}
-		
-
-
+		}	
 	}
 
-	//Initialize the socket and start listening for connection
+	//Initialize the socket and start listening for connection and prepare the event
 	bool Network::initNetwork(std::string portNumber)
 	{
+		//Initialize event detail
+		networkClientConnEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventClientConNet");
+		networkMessageRecEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventRecNet");
+		
+
 		portNumberStr = portNumber;
 		if (!startWinsock(2, 2)) return false;
 		if (!startSocket(portNumberStr.c_str())) return false;
@@ -79,6 +98,8 @@
 		if (!startWinsock(2, 2)) return false;
 		if (!startSocket(portNumberStr.c_str())) return false;
 		if (!acceptClient()) return false;
+
+		return true;
 	}
 
 	//Close connection 
@@ -93,6 +114,7 @@
 		WSACleanup();
 
 	}
+
 
 	bool Network::startWinsock(BYTE majorVersion, BYTE minorVersion) {
 
@@ -179,35 +201,26 @@
 		return true;
 	}
 
-	bool Network::acceptClient() {
-		std::cout << "client socket - accept Client: " << hClientSocket << std::endl;
-		
-		
-		
+	bool Network::acceptClient() {						
 		// Accept a client socket connection
 		hClientSocket = accept(hSocket, NULL, NULL);
 		if (hClientSocket == INVALID_SOCKET) {
 			errorShow(TEXT("accept"));
 			closeConnection();
 			return false;
-		}
-
-		std::cout << "client socket - acceptClient() - after accept: " << hClientSocket << std::endl;
-
-		std::cout << "Client connesso" << std::endl;
+		}				
 		closesocket(hSocket);
 		clientConnected = true;
 		SetEvent(networkClientConnEvent);
+		
 		return true;
 	}
 
 	//Method that receives network messages and communicates them to the controller
 	bool Network::receiveMessages()
 	{		
-
 		int iSendResult;
 		int iResult;
-
 
 		// Receive until the peer shuts down the connection or send close connection message
 		do {
@@ -236,27 +249,24 @@
 			nLeft -= iResult;
 			idx += iResult;
 			}
-			
-
-				
+							
 			std::string totalDataStr = std::string(recvbuf);
 			totalDataStr.erase(varSize);
 			size_t tagPos= totalDataStr.find("|");
 			std::string pidStr = totalDataStr.substr(0, tagPos);	//First part of the message is the pid of the process
 			std::string keyStr = totalDataStr.substr(tagPos + 1);	//second part of the messa is the shortcut key to send at process
-			std::cout << "pidStr: " << pidStr << std::endl;
-			std::cout << "keyStr: " << keyStr << std::endl;
-				
-			//@TODO GESTIRE IL PASSAGGIO DELLE INFORMAZIONI AL CONTROLLER
-				
-				
 
 				
-			//CONVERTIRE DA STRING A WSTRING PER MANDARLO
-			//BRUTTA NOTIZIA MAILSLOT NON PUò ESSERE USATO ALL'INTERNO DELLO STESSO PROCESSO, 
-			//NOI ABBIAMO APERTO LA MAILSLOT MA NON POSSIAMO SCRIVERLA
-				
+			//PASSAGGIO DELLE INFORMAZIONI AL CONTROLLER
+			messageInfo.pid = std::stoul(pidStr, nullptr, 0);
+			messageInfo.eventType = NETWORKMESSAGE;
+			messageInfo.additionalInfo = keyStr;					//Shortcut inviata dal client
 
+			pushNetworkMessage(messageInfo);			
+
+			//Messaggio ricevuto, sollevo evento
+			SetEvent(networkMessageRecEvent);						
+				
 				
 			// Echo the buffer back to the sender
 			iSendResult = send(hClientSocket, recvbuf, iResult, 0);
@@ -268,10 +278,8 @@
 			else if (iResult == 0)
 			printf("Connection closing...\n");
 			
-		} while (iResult > 0);
-		
+		} while (iResult > 0);		
 		return true;
-
 	}
 
 	void Network::errorShow(LPTSTR lpszFunction)
