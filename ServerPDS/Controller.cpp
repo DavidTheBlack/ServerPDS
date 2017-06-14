@@ -68,6 +68,7 @@ bool Controller::Init()
 	}
 	
 	//@TODO gestire gli errori
+
 	return true;
 }
 
@@ -244,6 +245,13 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 	case NETCLIENTCONNECTED:		//Client connesso
 		std::cout << "Client connesso" << std::endl;		
 		ResetEvent(eventClientConNet);
+		//Inviare La lista dei processi attivi al client
+
+
+
+
+
+
 		break;
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
 			std::cout << "Processo con PID" << netEventInfo.pid << "ha ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()

@@ -20,14 +20,9 @@ private:
 	void pushNetworkMessage(EventInfo);	//Add network message to the network queue
 	std::mutex mut;
 
-	//Windows mailslot parameters
-	LPTSTR Slot;	//Nome mailslot
-	HANDLE hSlot;	//handle mailslot
-
 	//True if there is a client connected false otherwise
 	bool clientConnected ;
 	
-
 	SOCKET hSocket;
 	SOCKET hClientSocket;
 	int iResult;
@@ -41,7 +36,6 @@ private:
 	bool acceptClient();
 	void errorShow(LPTSTR lpszFunction);
 	
-	bool WriteSlot(HANDLE hSlot, LPCTSTR lpszMessage);			//Send the message to the Mail Slot
 	bool restartNetwork();
 	void closeConnection();
 	bool receiveMessages();
@@ -50,15 +44,15 @@ private:
 public:
 	Network();
 	~Network();
-
-	bool getConnectionState();
+	bool initNetwork(std::string);								//Initialize the socket and start listening for connection	
+	bool getConnectionState();									//Return true if the client is connected false otherwise
 
 	EventInfo getNetworkMessage();								//Return the first message in the network message queue
 	size_t getNetworkMessagesNumber();							//Return the numbr of messages in the network message queue	
 
 	void networkTask();
 
-	bool initNetwork(std::string);								//Initialize the socket and start listening for connection	
+	
 	
 	
 

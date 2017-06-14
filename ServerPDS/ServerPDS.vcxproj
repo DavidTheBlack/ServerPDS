@@ -103,10 +103,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\boost_1_63_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\boost_1_63_0\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -137,12 +139,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\boost_1_63_0\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\boost_1_63_0\libs;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -151,6 +155,8 @@
   <ItemGroup>
     <ClInclude Include="Controller.h" />
     <ClInclude Include="EventInfo.h" />
+    <ClInclude Include="IconExtractor.h" />
+    <ClInclude Include="JsonSerializer.h" />
     <ClInclude Include="MyHook.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="ProcessModel.h" />
@@ -161,6 +167,8 @@
   <ItemGroup>
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="EventInfo.cpp" />
+    <ClCompile Include="IconExtractor.cpp" />
+    <ClCompile Include="JsonSerializer.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="ProcessModel.cpp" />
     <ClCompile Include="main.cpp" />

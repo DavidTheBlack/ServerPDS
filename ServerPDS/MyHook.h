@@ -11,7 +11,6 @@ private:
 
 public:
 	MyHook();
-	//static MyHook& Instance();		// Singleton
 	HHOOK hook;						// handle to the hook	
 	MSG msg;						// struct with information about all messages in our hook queue
 	int StartMonitoringProcesses();

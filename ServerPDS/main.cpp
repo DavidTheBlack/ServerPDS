@@ -14,12 +14,17 @@
 #include "EventInfo.h"
 #include "Network.h"
 #include "Controller.h"
+#include <boost\property_tree\ptree.hpp>
+#include "JsonSerializer.h"
+
+
 
 
 
 
 int _tmain(int argc, _TCHAR* argv[]) {
-	
+	JsonSerializer js;
+
 	Controller controller;
 	controller.Init();
 	controller.Run();	

@@ -19,9 +19,18 @@ private:
 	//Handler del processo che detiene il focus
 	HWND focusProcess;
 
+	
+
 
 
 public:	
+
+	/* Struttura dati per gestire le informazioni dei processi, tupla c++ */
+	typedef std::tuple<DWORD, int, std::wstring ,std::wstring, std::string> processInfo;
+	//0 PID; 1 Stato processo; 2 titlebar; 3 path; 4 icon information
+
+
+
 	/**
 	* Set the value of FocusedProcessPid
 	* Pid del processo che attualmente ha il focus
@@ -71,6 +80,19 @@ public:
 	*/
 	bool removeProcess(HWND processHwnd);
 
+	/**
+	* Retrieve 1 process information starting from HWND
+	* @return processInfo tupel structure
+	* @param HWND of the process
+	*/
+	processInfo getProcessInfo(HWND);	
+
+	/**
+	* retrieve all processes iformation 
+	* @return processInfo tupel structure
+	* @param HWND of the process
+	*/
+	std::list<processInfo> getProcessesInfo();
 };
 
 #endif // !PROCESSMODEL_H

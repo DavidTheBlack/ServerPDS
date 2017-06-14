@@ -58,7 +58,6 @@
 		MessageQueue.push(info);
 	}
 
-
 	size_t Network::getNetworkMessagesNumber()
 	{
 		std::lock_guard<std::mutex> l(mut);
@@ -72,6 +71,7 @@
 			if (!receiveMessages()) {
 				std::cout << "Receive message ha restituito un errore" << std::endl;
 				//Se la receive message torna false devo riavviare il socket e accettare nuove connessioni
+				//@TODO gestire la notifica della connessione e disconnessione tramite evento
 				restartNetwork();
 			}
 		}	
@@ -114,7 +114,6 @@
 		WSACleanup();
 
 	}
-
 
 	bool Network::startWinsock(BYTE majorVersion, BYTE minorVersion) {
 
@@ -314,19 +313,5 @@
 		//ExitProcess(dw);
 	}
 
-	//Method used to send message via messageslot
-	bool Network::WriteSlot(HANDLE hSlot, LPCTSTR lpszMessage)
-	{
-		DWORD cbWritten;
-		BOOL fResult = WriteFile(hSlot, lpszMessage,
-			(DWORD)(lstrlen(lpszMessage) + 1) * sizeof(TCHAR),
-			&cbWritten, (LPOVERLAPPED)NULL);
-		if (!fResult)
-		{
-			std::cout << "errore in scrittura mailslot: " << GetLastError() << std::endl;
-			return false;
-		}
-		return true;
-	}
 
 

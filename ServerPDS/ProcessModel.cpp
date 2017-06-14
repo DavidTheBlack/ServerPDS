@@ -2,6 +2,8 @@
 #include <mutex>
 #include <algorithm>
 #include <list>
+#include <iostream>
+#include <string>
 #include <Windows.h>
 #include "ProcessModel.h"
 
@@ -154,6 +156,69 @@
 		  return true;
 	  }
 	  return false;
+  }
+
+  ProcessModel::processInfo ProcessModel::getProcessInfo(HWND hWnd)
+  {
+	  //1) lock della struttura dati
+	  //2) Reperisco informazioni sul processo
+	  std::lock_guard<std::mutex> l(mut);
+	  
+	  HANDLE hProcess;
+	  ProcessModel::processInfo pI;
+
+
+
+	  GetWindowThreadProcessId(hWnd, &std::get<0>(pI)); //retrieves the identifier of the process that created the window
+
+	  if ((hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+		  FALSE,
+		  std::get<0>(pI))) == NULL) // open an existing local process object returning an open handle to the specified process
+	  {
+		  std::cerr << "OpenProcess() failed: " << GetLastError() << "\n";
+	  }
+	  else
+	  {
+		  TCHAR name[MAX_PATH];
+		  DWORD nameLength = MAX_PATH;
+		  if (!QueryFullProcessImageName(hProcess, 0, name, &nameLength))  //retrieves the full name of the executable image for the specified process
+		  {
+			  std::cerr << "QueryFullProcessImageName() failed: " <<
+				  GetLastError() << "\n";
+		  }
+		  else
+		  {
+			  std::get<3>(pI) = std::wstring(name);
+			  CloseHandle(hProcess);
+		  }
+	  }
+	  int length = GetWindowTextLength(hWnd) + 1;
+	  if (length != 0) {
+		  std::wstring windowTitle(length, '\0'); //Note that storage for a std::string is only guaranteed to be contiguous in C++11. With C++98 you should not really be using a std::string as a buffer; you should use std::vector.
+												  //Also, you should preferrably not use a cast to remove const - ness.Instead, get the address of the first element.
+		  GetWindowText(hWnd, &windowTitle[0], length);
+		  std::get<2>(pI) = windowTitle;
+	  }
+	  else {
+		  std::get<2>(pI) = L"Finestra senza titolo";
+	  }
+	  
+
+	  return pI;
+
+
+
+
+
+	  
+  }
+
+  std::list<ProcessModel::processInfo> ProcessModel::getProcessesInfo()
+  {
+
+	  std::list<ProcessModel::processInfo> processInfoList;
+	  for(int i=0;i<getNumberOfProcesses)
+
   }
 
 
