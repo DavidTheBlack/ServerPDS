@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <iostream>
 #include <Windows.h>
 #include "IconExtractor.h"
 
@@ -9,9 +10,19 @@ CIconExtractor::CIconExtractor()
 {
 }
 
-DWORD CIconExtractor::ExtracttIcon(HINSTANCE hResource, LPCTSTR TargetICON)
+DWORD CIconExtractor::ExtracttIcon(std::wstring processPath, std::string &iconString)
 {
-    LPICONRESOURCE      lpIR    = NULL;
+    
+	HINSTANCE hResource = LoadLibrary(processPath.c_str());
+	if (hResource == NULL)
+	{
+		return	GetLastError();
+	}
+
+	
+	
+	
+	LPICONRESOURCE      lpIR    = NULL;
     HRSRC               hRsrc   = NULL;
     HGLOBAL             hGlobal = NULL;
     LPMEMICONDIR        lpIcon  = NULL;
@@ -80,7 +91,7 @@ DWORD CIconExtractor::ExtracttIcon(HINSTANCE hResource, LPCTSTR TargetICON)
         }
     }
 
-    DWORD ret = WriteIconToICOFile(lpIR,TargetICON);
+    DWORD ret = WriteIconToICOString(lpIR,iconString);
 
     for (UINT i = 0; i < lpIR->nNumImages; ++i)
     {
@@ -98,19 +109,24 @@ DWORD CIconExtractor::ExtracttIcon(HINSTANCE hResource, LPCTSTR TargetICON)
     return NO_ERROR;
 }
 
-DWORD CIconExtractor::WriteIconToICOFile(LPICONRESOURCE lpIR, LPCTSTR szFileName)
+DWORD CIconExtractor::WriteIconToICOString(LPICONRESOURCE lpIR, std::string& targetString)
 {
 	
-	DWORD       dwBytesWritten  = 0;
+	ULONG       dwBytesWritten  = 0;
+	ULONG       totbytez        = 0;
 
-    HANDLE hFile = CreateFile(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    // open the file
-    if (!hFile)
-        return GetLastError();
+	IStream* pStream = 0;
+	CreateStreamOnHGlobal(0, TRUE, &pStream);
+	LONG cbSize = 0;
+	
 
     // Write the header
-    if (WriteICOHeader(hFile, lpIR->nNumImages))
-        return GetLastError();
+	ULONG totalHeaderBytes = 0;
+	if (WriteICOHeader(pStream, lpIR->nNumImages, totalHeaderBytes))
+		return GetLastError();
+	//Aggiorno il numero di bytes scritti 
+	totbytez += totalHeaderBytes;
+        
 
     // Write the ICONDIRENTRY's
     for (UINT i = 0; i < lpIR->nNumImages; ++i)
@@ -132,11 +148,10 @@ DWORD CIconExtractor::WriteIconToICOFile(LPICONRESOURCE lpIR, LPCTSTR szFileName
         ide.dwImageOffset = CalculateImageOffset( lpIR, i );
 
         // Write the ICONDIRENTRY to disk
-        if (!WriteFile(hFile, &ide, sizeof(ICONDIRENTRY), &dwBytesWritten, NULL))
-            return GetLastError();
-
-        if (dwBytesWritten != sizeof(ICONDIRENTRY))
-            return GetLastError();
+		pStream->Write(&ide, sizeof(ICONDIRENTRY), &dwBytesWritten);
+		if (dwBytesWritten != sizeof(ICONDIRENTRY))
+			return GetLastError();
+		totbytez += dwBytesWritten;
     }
 
     // Write the image bits for each image
@@ -147,17 +162,34 @@ DWORD CIconExtractor::WriteIconToICOFile(LPICONRESOURCE lpIR, LPCTSTR szFileName
 
         // Set the sizeimage member to zero
         lpIR->IconImages[i].lpbi->bmiHeader.biSizeImage = 0;
-        if (!WriteFile( hFile, lpIR->IconImages[i].lpBits, lpIR->IconImages[i].dwNumBytes, &dwBytesWritten, NULL))
-            bError = true;
-
-        if (dwBytesWritten != lpIR->IconImages[i].dwNumBytes)
-            bError = true;
-
+		pStream->Write(lpIR->IconImages[i].lpBits, lpIR->IconImages[i].dwNumBytes, &dwBytesWritten);
+		if (dwBytesWritten != lpIR->IconImages[i].dwNumBytes)
+			return GetLastError();
+		totbytez += dwBytesWritten;
         // set it back
         lpIR->IconImages[i].lpbi->bmiHeader.biSizeImage = dwTemp;
         if (bError)
             return GetLastError();
     }
+	
+	LARGE_INTEGER li = { 0 };
+	pStream->Seek(li, STREAM_SEEK_SET, NULL);
+
+	HGLOBAL hBuf = 0;
+	GetHGlobalFromStream(pStream, &hBuf);
+	void* buffer = GlobalLock(hBuf);
+
+
+	std::string icoString((char*)buffer,totbytez);
+	//Pass the icon string
+	targetString = icoString;
+	
+	
+	GlobalUnlock(buffer);
+
+	// Cleanup
+	pStream->Release();
+
     return NO_ERROR;
 }
 
@@ -182,31 +214,33 @@ BOOL CIconExtractor::EnumResNameProc(HMODULE hModule, LPCTSTR lpszType, LPTSTR l
 	return ptr->AddResourceProc(lpszType, lpszName);
 }
 
-DWORD CIconExtractor::WriteICOHeader(HANDLE hFile, UINT nNumEntries) const
+DWORD CIconExtractor::WriteICOHeader(IStream* is, UINT nNumEntries, ULONG &totalBytes) const
 {
     WORD    Output          = 0;
-    DWORD   dwBytesWritten  = 0;
+    ULONG   dwBytesWritten  = 0;
+	
 
     // Write 'reserved' WORD
-    if (!WriteFile( hFile, &Output, sizeof(WORD), &dwBytesWritten, NULL))
-        return GetLastError();
-    // Did we write a WORD?
-    if (dwBytesWritten != sizeof(WORD))
-        return GetLastError();
+	
+	if (is->Write(&Output, sizeof(WORD), &dwBytesWritten) != S_OK)
+		return GetLastError();
+	if (dwBytesWritten != sizeof(WORD) )
+		return GetLastError();
+	totalBytes += dwBytesWritten;
     // Write 'type' WORD (1)
     Output = 1;
-    if (!WriteFile( hFile, &Output, sizeof(WORD), &dwBytesWritten, NULL))
-        return GetLastError();
-    // Did we write a WORD?
-    if (dwBytesWritten != sizeof(WORD))
-        return GetLastError();
+	if (is->Write(&Output, sizeof(WORD), &dwBytesWritten) != S_OK)
+		return GetLastError();
+	if (dwBytesWritten != sizeof(WORD))
+		return GetLastError();
+	totalBytes += dwBytesWritten;
     // Write Number of Entries
     Output = (WORD)nNumEntries;
-    if (!WriteFile(hFile, &Output, sizeof(WORD), &dwBytesWritten, NULL))
-        return GetLastError();
-    // Did we write a WORD?
-    if (dwBytesWritten != sizeof(WORD))
-        return GetLastError();
+	if (is->Write(&Output, sizeof(WORD), &dwBytesWritten) != S_OK)
+		return GetLastError();
+	if (dwBytesWritten != sizeof(WORD))
+		return GetLastError();
+	totalBytes += dwBytesWritten;
 
     return NO_ERROR;
 }

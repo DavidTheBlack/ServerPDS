@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <Windows.h>
+#include "IconExtractor.h"
 #include "ProcessModel.h"
 
 
@@ -160,6 +161,7 @@
 
   ProcessModel::processInfo ProcessModel::getProcessInfo(HWND hWnd)
   {
+
 	  //1) lock della struttura dati
 	  //2) Reperisco informazioni sul processo
 	  std::lock_guard<std::mutex> l(mut);
@@ -204,21 +206,26 @@
 	  }
 	  
 
-	  return pI;
+	  //AGGIUNGERE INFORMAZIONI SULL'ICONA
+	  std::string stringIcon;
+	  if (iconExtrObj.ExtracttIcon(std::get<3>(pI), stringIcon)) {
+		  //Aggiungere eccezione per gestire errore di estrazione icona
+	  }
+	  std::get<4>(pI) = stringIcon;
 
 
 
-
-
-	  
+	  return pI;	  
   }
 
-  std::list<ProcessModel::processInfo> ProcessModel::getProcessesInfo()
+
+  //Da finire
+  /*std::list<ProcessModel::processInfo> ProcessModel::getProcessesInfo()
   {
 
 	  std::list<ProcessModel::processInfo> processInfoList;
 	  for(int i=0;i<getNumberOfProcesses)
 
-  }
+  }*/
 
 

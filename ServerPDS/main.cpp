@@ -9,6 +9,7 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
+#include "IconExtractor.h"
 #include "MyHook.h"
 #include "ProcessModel.h"
 #include "EventInfo.h"

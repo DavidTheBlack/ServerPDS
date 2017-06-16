@@ -19,6 +19,9 @@ private:
 	//Handler del processo che detiene il focus
 	HWND focusProcess;
 
+	//Icon extractor Object
+	CIconExtractor iconExtrObj;
+
 	
 
 

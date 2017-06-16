@@ -10,6 +10,7 @@
 #include <fstream>
 #include <strsafe.h>
 #include "WindowsEnum.h"
+#include "IconExtractor.h"
 #include "MyHook.h"
 #include "EventInfo.h"
 #include "ProcessModel.h"
@@ -247,17 +248,19 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 		ResetEvent(eventClientConNet);
 		//Inviare La lista dei processi attivi al client
 
-
-
-
-
-
 		break;
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
-			std::cout << "Processo con PID" << netEventInfo.pid << "ha ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()
-				<< std::endl << "ed ha HANDLE: " << model.pidToHwnd(netEventInfo.pid) <<std::endl;
-			ResetEvent(eventRecNet);
-		break;	
+	{
+		std::cout << "Processo con PID" << netEventInfo.pid << "ha ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()
+			<< std::endl << "ed ha HANDLE: " << model.pidToHwnd(netEventInfo.pid) << std::endl;
+		ProcessModel::processInfo pInfo = model.getProcessInfo(model.pidToHwnd(netEventInfo.pid));
+
+
+
+		ResetEvent(eventRecNet);
+
+		break;
+	}
 	default:
 		break;
 	}

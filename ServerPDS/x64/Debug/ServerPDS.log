@@ -1,25 +1,7 @@
-﻿  ProcessModel.cpp
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.cpp(215): error C2065: 'processInfo': identificatore non dichiarato
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.cpp(215): error C2923: 'std::list': 'processInfo' non è un argomento di tipo modello valido per il parametro '_Ty'
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.cpp(215): error C3203: 'allocator': impossibile utilizzare classe modello non specializzato come argomento di modello per il parametro di modello '_Alloc'. Previsto un tipo reale
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.cpp(216): error C2556: 'std::list ProcessModel::getProcessesInfo(void)': la funzione in overload differisce da 'std::list<ProcessModel::processInfo,std::allocator<_Ty>> ProcessModel::getProcessesInfo(void)' solo per il tipo restituito
-          with
-          [
-              _Ty=ProcessModel::processInfo
-          ]
-  c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(95): note: vedere la dichiarazione di 'ProcessModel::getProcessesInfo'
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.cpp(215): error C2371: 'ProcessModel::getProcessesInfo': ridefinizione. Tipi di base differenti.
-  c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(95): note: vedere la dichiarazione di 'ProcessModel::getProcessesInfo'
-  JsonSerializer.cpp
-  IconExtractor.cpp
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(280): warning C4311: 'cast di tipo': troncamento puntatore da 'LPTSTR' a 'ULONG'
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(280): warning C4302: 'cast di tipo': troncamento da 'LPTSTR' a 'ULONG'
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(282): warning C4311: 'cast di tipo': troncamento puntatore da 'LPTSTR' a 'ULONG'
-c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(282): warning C4302: 'cast di tipo': troncamento da 'LPTSTR' a 'ULONG'
-  Generazione del codice in corso...
-  Compilazione in corso...
-  main.cpp
-  Generazione del codice in corso...
-  Omissione in corso... (nessuna modifica importante rilevata)
-  MyHook.cpp
-  Controller.cpp
+﻿  IconExtractor.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(314): warning C4311: 'cast di tipo': troncamento puntatore da 'LPTSTR' a 'ULONG'
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(314): warning C4302: 'cast di tipo': troncamento da 'LPTSTR' a 'ULONG'
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(316): warning C4311: 'cast di tipo': troncamento puntatore da 'LPTSTR' a 'ULONG'
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(316): warning C4302: 'cast di tipo': troncamento da 'LPTSTR' a 'ULONG'
+  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.exe
+  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.pdb (Full PDB)

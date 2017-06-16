@@ -16,7 +16,6 @@ typedef struct
     DWORD   dwBytesInRes;         // how many bytes in this resource?
     WORD    nID;                  // the ID
 } MEMICONDIRENTRY, *LPMEMICONDIRENTRY;
-
 typedef struct
 {
     WORD            idReserved;   // Reserved
@@ -68,31 +67,33 @@ typedef struct
 class CIconExtractor
 {
 
-public:
-    
-    DWORD ExtracttIcon(HINSTANCE hResource, LPCTSTR TargetICON);
+public:    
 	CIconExtractor();
 
-protected:
+	//Extract icon information in string starting from the process path
+	DWORD ExtracttIcon(std::wstring processPath, std::string &iconString);
 
+protected:
 	BOOL AddResourceProc(LPCTSTR lpszType, LPTSTR lpszName);
 
 private:
-	DWORD WriteIconToICOFile(LPICONRESOURCE lpIR, LPCTSTR szFileName);
-    BOOL AdjustIconImagePointers(LPICONIMAGE lpImage);
+	//Write the data bytes of the icon to target string
+	DWORD WriteIconToICOString(LPICONRESOURCE lpIR, std::string& targetString);
+    
+	BOOL AdjustIconImagePointers(LPICONIMAGE lpImage);
     LPSTR FindDIBBits(LPSTR lpbi);
     WORD DIBNumColors(LPSTR lpbi) const;
     WORD PaletteSize(LPSTR lpbi);
     DWORD BytesPerLine(LPBITMAPINFOHEADER lpBMIH) const;
-    DWORD WriteICOHeader(HANDLE hFile, UINT nNumEntries) const;
+	DWORD WriteICOHeader(IStream* is, UINT nNumEntries, ULONG &totalBytes) const;
     DWORD CalculateImageOffset(LPICONRESOURCE lpIR, UINT nIndex) const;
 	   
 
-	ULONG		 m_GroupIconID[MAX_ICONS];
+	ULONG		m_GroupIconID[MAX_ICONS];
 	LPTSTR      m_GroupIconName[MAX_ICONS];
 
-	UINT 		 m_GKounter;
-	UINT         m_GNameKounter;
+	UINT 		m_GKounter;
+	UINT        m_GNameKounter;
 
 	static BOOL CALLBACK EnumResNameProc(HMODULE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG_PTR lParam);
 
