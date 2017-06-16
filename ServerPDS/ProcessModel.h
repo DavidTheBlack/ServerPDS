@@ -22,9 +22,6 @@ private:
 	//Icon extractor Object
 	CIconExtractor iconExtrObj;
 
-	
-
-
 
 public:	
 

@@ -9,11 +9,14 @@
 #include <queue>
 #include <fstream>
 #include <strsafe.h>
+#include <boost\property_tree\ptree.hpp>
+#include <boost\property_tree\json_parser.hpp>
 #include "WindowsEnum.h"
 #include "IconExtractor.h"
 #include "MyHook.h"
 #include "EventInfo.h"
 #include "ProcessModel.h"
+#include "JsonSerializer.h"
 #include "Network.h"
 #include "Controller.h"
 
@@ -63,12 +66,17 @@ bool Controller::Init()
 	model.setProcessesList(we.getData());
 	//model.setProcessesList(we.enum_windows().getData());
 	
+	JsonSerializer js;
+	js.serializeProcessesInfo(model.getProcessesInfo());
+	
 	//Trying to start the network
 	if (!netObj.initNetwork("4444")) {
 		std::cout << "Impossibile avviare la connessione di rete" << std::endl;
 	}
 	
-	//@TODO gestire gli errori
+	
+	//@TODO gestire gli errori Gestire anche il caso in cui non avvenga connessione da client - la funzione deve comunque partire
+	//l'inizializzazione della rete deve avvenire su thread separato
 
 	return true;
 }
@@ -209,27 +217,33 @@ void Controller::ManageHookEvent(EventInfo info) {
 	switch (info.eventType)
 	{
 	case WINDOWCREATED:		//Processo creato
+	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato" << info.eventType << std::endl;
 		if (!model.addProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
 		}
+		
 		//@TODO inviare dato al client
 		break;
+	}
 	case WINDOWCLOSED:		//Processo chiuso
+	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto " << info.eventType << std::endl;
 		if (!model.removeProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
 		}
 		//@TODO inviare dato al client
 		break;
+	}
 	case WINDOWFOCUSED:		//Processo ha preso il focus
+	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " ha ottenuto focus" << info.eventType << std::endl;
 		if (!model.setFocusedProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità settare focus
 		}
 		//@TODO inviare dato al client
 		break;
-	
+	}
 	default:
 		break;
 	}
@@ -243,14 +257,18 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 {
 	switch (netEventInfo.eventType)
 	{
-	case NETCLIENTCONNECTED:		//Client connesso
-		std::cout << "Client connesso" << std::endl;		
-		ResetEvent(eventClientConNet);
-		//Inviare La lista dei processi attivi al client
-
+	case NETCLIENTCONNECTED:	//Client connesso
+	{
+		std::cout << "Client connesso" << std::endl;
+		//@TODO Inviare La lista dei processi attivi al client
+		
+		ResetEvent(eventClientConNet);		
 		break;
+	}
+		
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
 	{
+		//@TODO girare shortcut al processo in focus
 		std::cout << "Processo con PID" << netEventInfo.pid << "ha ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()
 			<< std::endl << "ed ha HANDLE: " << model.pidToHwnd(netEventInfo.pid) << std::endl;
 		ProcessModel::processInfo pInfo = model.getProcessInfo(model.pidToHwnd(netEventInfo.pid));
@@ -258,7 +276,6 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 
 
 		ResetEvent(eventRecNet);
-
 		break;
 	}
 	default:

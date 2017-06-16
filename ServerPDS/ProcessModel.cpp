@@ -218,14 +218,18 @@
 	  return pI;	  
   }
 
+  //Restituisce una lisa di tutti i processi presenti nel pc con le informazioni relative ad ogni processo
+  std::list<ProcessModel::processInfo> ProcessModel::getProcessesInfo()
+  {	 	  	  
+	  std::list<ProcessModel::processInfo> processesInfoList;
 
-  //Da finire
-  /*std::list<ProcessModel::processInfo> ProcessModel::getProcessesInfo()
-  {
+	  std::list<std::pair<HWND, DWORD>>::iterator it;
+	  //Popolo la lista delle informazioni per ogni processo
+	  for (it = processesList.begin(); it != processesList.end(); ++it) {
+		  processesInfoList.push_back( getProcessInfo(it->first));
+	  }
 
-	  std::list<ProcessModel::processInfo> processInfoList;
-	  for(int i=0;i<getNumberOfProcesses)
-
-  }*/
+	  return processesInfoList;		 
+  }
 
 

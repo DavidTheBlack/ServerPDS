@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+
 #include <queue>
 #include <mutex>
 #include <algorithm>
@@ -75,6 +76,33 @@
 				restartNetwork();
 			}
 		}	
+	}
+
+	int Network::sendMessage(std::string data)
+	{
+		char* sendbuf = new char[data.length()];
+
+		strcpy_s(sendbuf, data.length(), data.c_str());
+		
+		const uint32_t varSize = data.length();
+
+		int idx = 0;		
+		int nLeft = data.length();
+		int bytesSent;
+
+		//Send data size
+		send(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
+		//Send data packets
+		while (nLeft > 0) {
+			bytesSent = send(hClientSocket, &sendbuf[idx], nLeft, 0);
+			if (bytesSent == SOCKET_ERROR) {
+				//@TODO gestione degli errori
+				break;
+			}
+			nLeft -= bytesSent;
+			idx += bytesSent;
+		}
+		return idx;
 	}
 
 	//Initialize the socket and start listening for connection and prepare the event

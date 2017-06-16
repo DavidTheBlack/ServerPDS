@@ -49,12 +49,9 @@ public:
 
 	EventInfo getNetworkMessage();								//Return the first message in the network message queue
 	size_t getNetworkMessagesNumber();							//Return the numbr of messages in the network message queue	
-
 	void networkTask();
 
-	
-	
-	
+	int sendMessage(std::string);								//Send data to the client
 
 	
 };

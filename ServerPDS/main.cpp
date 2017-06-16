@@ -9,14 +9,15 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
+#include <boost\property_tree\ptree.hpp>
+#include <boost\property_tree\json_parser.hpp>
+#include "EventInfo.h"
 #include "IconExtractor.h"
 #include "MyHook.h"
 #include "ProcessModel.h"
-#include "EventInfo.h"
+#include "JsonSerializer.h"
 #include "Network.h"
 #include "Controller.h"
-#include <boost\property_tree\ptree.hpp>
-#include "JsonSerializer.h"
 
 
 
@@ -24,10 +25,11 @@
 
 
 int _tmain(int argc, _TCHAR* argv[]) {
-	JsonSerializer js;
+	
 
 	Controller controller;
-	controller.Init();
+	controller.Init();	
+
 	controller.Run();	
 	return 0;
 
