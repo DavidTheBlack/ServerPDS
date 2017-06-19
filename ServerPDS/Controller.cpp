@@ -21,6 +21,22 @@
 #include "Controller.h"
 
 
+Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms1"))
+{
+	//Inizializzazione strutture dati necessarie alla creazione processo monitor 32 bit
+	ZeroMemory(&x86StartupInfo, sizeof(x86StartupInfo));
+	x86StartupInfo.cb = sizeof(x86StartupInfo);
+	ZeroMemory(&x86ProcessInformation, sizeof(x86ProcessInformation));	
+}
+
+Controller::~Controller()
+{
+	//Terminiamo il processo monitor a 32 bit
+	SetEvent(terminateMonitorX86);
+	CloseHandle(x86ProcessInformation.hProcess);
+	CloseHandle(x86ProcessInformation.hThread);
+}
+
 //Metodo di inizializzazione del controller, richiama la enumWindows per fotografare lo stato corrente dei processi attivi
 //Salva l alista dei processi attivi nel model
 bool Controller::Init()
@@ -31,17 +47,17 @@ bool Controller::Init()
 
 	//Event initialization
 	eventX86 = CreateEvent(
-		NULL,               // default security attributes
-		TRUE,               // manual-reset event
-		FALSE,              // initial state is nonsignaled
-		TEXT("eventX86")	// object name
+		NULL,						// default security attributes
+		TRUE,						// manual-reset event
+		FALSE,						// initial state is nonsignaled
+		TEXT("eventX86")			// object name
 	);
 
 	eventX64 = CreateEvent(
-		NULL,               // default security attributes
-		TRUE,               // manual-reset event
-		FALSE,              // initial state is nonsignaled
-		TEXT("eventX64")	// object name
+		NULL,						// default security attributes
+		TRUE,						// manual-reset event
+		FALSE,						// initial state is nonsignaled
+		TEXT("eventX64")			// object name
 	);
 
 	eventClientConNet = CreateEvent(
@@ -52,10 +68,17 @@ bool Controller::Init()
 	);
 
 	eventRecNet = CreateEvent(
-		NULL,               // default security attributes
-		TRUE,               // manual-reset event
-		FALSE,              // initial state is nonsignaled
-		TEXT("eventRecNet")	// object name
+		NULL,						// default security attributes
+		TRUE,						// manual-reset event
+		FALSE,						// initial state is nonsignaled
+		TEXT("eventRecNet")			// object name
+	);
+
+	terminateMonitorX86 = CreateEvent(
+		NULL,						// default security attributes
+		TRUE,						// manual-reset event
+		FALSE,						// initial state is nonsignaled
+		TEXT("terminateMonitorX86")	// object name
 	);
 	
 
@@ -289,9 +312,14 @@ void Controller::Run()
 	//Smithers libera i thread	
 	std::thread hookThread{ &MyHook::StartMonitoringProcesses,&myHookObj };
 	std::thread netThread{ &Network::networkTask, &netObj};
-	//Aggiungere il monitoraggio processi a 32bit
+	
+	//Lanciamo processo di hook a 32 bit
+	if (!CreateProcess(x86ProcessPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &x86StartupInfo, &x86ProcessInformation)) {
+		//@TODO gestire errore
+		std::cout << "Errore avvio processo monitor 32 bit " << GetLastError() << std::endl;
+	}
 
-	//Aggiungere il thread di rete
+	
 
 	HANDLE events[4];
 	events[0] = eventX86;

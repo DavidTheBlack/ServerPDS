@@ -14,23 +14,21 @@
 
 
 
-MyHook::MyHook(): RunStopHook(NULL) {
+MyHook::MyHook(LPCTSTR path): RunStopHook(NULL) {
 	//Dll loading and connection
-	hModule = LoadLibrary(L"dll.dll");
+	hModule = LoadLibrary(path);
 	if (!hModule){
-		std::cout << "no module loaded!";
+		std::cout << "no module loaded!" << path << std::endl;
 	}	
 	//Initialization of the pointer to RunStopHook method	
-	RunStopHook = (RunStopHookProc*)::GetProcAddress((HMODULE)hModule, "RunStopHook");
-	
-	
-};
+	RunStopHook = (RunStopHookProc*)::GetProcAddress((HMODULE)hModule, "RunStopHook");	
+}
 
-//Singleton
-//MyHook& MyHook::Instance() {
-//		static MyHook myHook;
-//		return myHook;
-//	}
+MyHook::~MyHook()
+{
+	UninstallHook();
+	FreeLibrary(hModule);
+}
 
 int MyHook::Messages() {
 	while (msg.message != WM_QUIT) { //while we do not close our application
@@ -41,23 +39,20 @@ int MyHook::Messages() {
 		Sleep(1);
 	}
 
-	/*MyHook::Instance().*/UninstallHook();
+	
 
 	return (int)msg.wParam; //return the messages
 }
 
-
-
 //Method used to start monitoring processes 
 int MyHook::StartMonitoringProcesses() {
 	//TODO GESTIRE CASO IN CUI NON SIA STATA CREATA LA CODA MESSAGGI
-	/*MyHook::Instance().*/InstallHook();
-	return /*MyHook::Instance().*/Messages();
+	InstallHook();
+	return Messages();
 }
 
 void MyHook::InstallHook() {
-	//Chiamo la funzione di aggancio hook
-	
+	//Chiamo la funzione di aggancio hook	
 	(*RunStopHook)(true, GetModuleHandle(0));
 	
 }

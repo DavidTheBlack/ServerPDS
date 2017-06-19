@@ -16,14 +16,25 @@ private:
 	
 	ProcessModel model;
 
+	//Informazioni per avviare processo monitor 32bit
+	LPCTSTR x86ProcessPath = L"ProcessMonitorX86.exe";
+	STARTUPINFO x86StartupInfo;
+	PROCESS_INFORMATION x86ProcessInformation;
+
+
+
+
+
+
 	HANDLE hSlot;
-	LPTSTR Slot = TEXT("\\\\.\\mailslot\\ms1");
+	LPTSTR Slot;
 
 	//Vector of the messages readed from the mailSlot
 	std::queue<std::wstring> hookMessageQueue;
-
+	
 	//Hook object
-	MyHook myHookObj;
+	MyHook	myHookObj;
+	
 
 	//Network object
 	Network netObj;
@@ -50,7 +61,10 @@ public:
 	HANDLE eventX86;
 	HANDLE eventClientConNet;
 	HANDLE eventRecNet;
+	HANDLE terminateMonitorX86;	//Event used to terminate monitor of the x86 Processes
 	
+	Controller();
+	~Controller();
 
   /**
    * Popola per la prima volta la struttura dati con le finestre aperte, invia i dati

@@ -1,4 +1,5 @@
-#pragma
+#ifndef EVENTINFO_H
+#define EVENTINFO_H
 
 #define WINDOWCREATED 1
 #define WINDOWCLOSED 2
@@ -15,6 +16,7 @@ typedef struct {
 	std::string additionalInfo; //Additional information to deliver to the process
 }EventInfo;
 
+#endif
 
 
 

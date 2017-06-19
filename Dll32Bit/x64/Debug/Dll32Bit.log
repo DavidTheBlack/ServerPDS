@@ -1,0 +1,6 @@
+﻿  stdafx.cpp
+  dllmain.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\dll32bit\dllmain.cpp(116): warning C4244: 'argomento': conversione da 'WPARAM' a 'UINT'. Possibile perdita di dati.
+     Creazione della libreria C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll32Bit.lib e dell'oggetto C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll32Bit.exp
+  Dll32Bit.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll32Bit.dll
+  Dll32Bit.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\Dll32Bit.pdb (Full PDB)

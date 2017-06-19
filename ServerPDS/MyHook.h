@@ -1,7 +1,7 @@
 #pragma once
 
 class MyHook {
-private:
+protected:
 
 	typedef void (RunStopHookProc)(bool, HINSTANCE);
 	RunStopHookProc* RunStopHook;
@@ -10,7 +10,8 @@ private:
 
 
 public:
-	MyHook();
+	MyHook(LPCTSTR);
+	~MyHook();
 	HHOOK hook;						// handle to the hook	
 	MSG msg;						// struct with information about all messages in our hook queue
 	int StartMonitoringProcesses();
@@ -18,6 +19,5 @@ public:
 	void InstallHook();				// function to install our hook
 	void UninstallHook();			// function to uninstall our hook
 	
-	
-	
+
 };
