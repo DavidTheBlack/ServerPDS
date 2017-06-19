@@ -17,7 +17,7 @@ private:
 	ProcessModel model;
 
 	//Informazioni per avviare processo monitor 32bit
-	LPCTSTR x86ProcessPath = L"ProcessMonitorX86.exe";
+	LPCTSTR x86ProcessPath;
 	STARTUPINFO x86StartupInfo;
 	PROCESS_INFORMATION x86ProcessInformation;
 

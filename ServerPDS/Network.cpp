@@ -34,6 +34,22 @@
 		WSACleanup();
 	}
 
+	//Initialize the socket and start listening for connection and prepare the event
+	bool Network::initNetwork(std::string portNumber)
+	{
+		//Initialize event detail
+		networkClientConnEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventClientConNet");
+		networkMessageRecEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventRecNet");
+
+
+		portNumberStr = portNumber;
+		if (!startWinsock(2, 2)) return false;
+		if (!startSocket(portNumberStr.c_str())) return false;
+		if (!acceptClient()) return false;
+
+		return true;
+	}
+
 	bool Network::getConnectionState()
 	{
 		return clientConnected;
@@ -68,6 +84,13 @@
 	//Method that will be threaded
 	void Network::networkTask()
 	{
+		//Trying to start the network
+		if (!initNetwork("4444")) {
+			std::cout << "Impossibile avviare la connessione di rete" << std::endl;
+		}
+
+
+
 		while (true) {
 			if (!receiveMessages()) {
 				std::cout << "Receive message ha restituito un errore" << std::endl;
@@ -103,22 +126,6 @@
 			idx += bytesSent;
 		}
 		return idx;
-	}
-
-	//Initialize the socket and start listening for connection and prepare the event
-	bool Network::initNetwork(std::string portNumber)
-	{
-		//Initialize event detail
-		networkClientConnEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventClientConNet");
-		networkMessageRecEvent = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"eventRecNet");
-		
-
-		portNumberStr = portNumber;
-		if (!startWinsock(2, 2)) return false;
-		if (!startSocket(portNumberStr.c_str())) return false;
-		if (!acceptClient()) return false;
-		
-		return true;
 	}
 
 	//Reinitialize connection after a network error

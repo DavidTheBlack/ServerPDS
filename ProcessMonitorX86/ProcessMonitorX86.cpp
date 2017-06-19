@@ -15,7 +15,7 @@
 int main()
 {
 	HANDLE terminateMonitorX86Event = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"terminateMonitorX86");
-	MyHook myHookObj32(L"Dll32Bit.dll");
+	MyHook myHookObj32(L"D:\\PoliTo\\Materie\\PdS\\Progetto\\32BitCode\\Dll32Bit.dll");
 
 
 
@@ -25,6 +25,8 @@ int main()
 	std::thread hookThread32{ &MyHook::StartMonitoringProcesses,&myHookObj32 };
 
 	WaitForSingleObject(terminateMonitorX86Event, INFINITE);
+
+	
 
 	
 	return 0;

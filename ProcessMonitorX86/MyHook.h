@@ -1,3 +1,5 @@
+//Myhook del processo 32Bit
+
 #ifndef MYHOOK_H
 #define MYHOOK_H
 

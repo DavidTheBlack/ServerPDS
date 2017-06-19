@@ -173,11 +173,13 @@
 
 	  GetWindowThreadProcessId(hWnd, &std::get<0>(pI)); //retrieves the identifier of the process that created the window
 
-	  if ((hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+
+
+	  if ((hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
 		  FALSE,
 		  std::get<0>(pI))) == NULL) // open an existing local process object returning an open handle to the specified process
 	  {
-		  std::cerr << "OpenProcess() failed: " << GetLastError() << "\n";
+		  std::cerr << "OpenProcess() failed: " << GetLastError() << "\n " << std::get<0>(pI) << std::endl;
 	  }
 	  else
 	  {

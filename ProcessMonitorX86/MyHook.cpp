@@ -1,3 +1,5 @@
+//Myhook del processo 32Bit
+
 #include "stdafx.h"
 
 #include <Windows.h>
@@ -15,7 +17,7 @@ MyHook::MyHook(LPCTSTR path): RunStopHook(NULL) {
 		std::cout << "no module loaded!" << path << std::endl;
 	}	
 	//Initialization of the pointer to RunStopHook method	
-	RunStopHook = (RunStopHookProc*)::GetProcAddress((HMODULE)hModule, "RunStopHook");	
+	RunStopHook = (RunStopHookProc*)::GetProcAddress((HMODULE)hModule, "RunStopHook32");	
 }
 
 MyHook::~MyHook()

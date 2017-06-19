@@ -21,7 +21,8 @@
 #include "Controller.h"
 
 
-Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms1"))
+Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms1")), 
+	x86ProcessPath(L"D:\\PoliTo\\Materie\\PdS\\Progetto\\32BitCode\\ProcessMonitorX86.exe")
 {
 	//Inizializzazione strutture dati necessarie alla creazione processo monitor 32 bit
 	ZeroMemory(&x86StartupInfo, sizeof(x86StartupInfo));
@@ -32,9 +33,10 @@ Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms
 Controller::~Controller()
 {
 	//Terminiamo il processo monitor a 32 bit
-	SetEvent(terminateMonitorX86);
-	CloseHandle(x86ProcessInformation.hProcess);
-	CloseHandle(x86ProcessInformation.hThread);
+	//SetEvent(terminateMonitorX86);
+	//CloseHandle(x86ProcessInformation.hProcess);
+	//CloseHandle(x86ProcessInformation.hThread);
+
 }
 
 //Metodo di inizializzazione del controller, richiama la enumWindows per fotografare lo stato corrente dei processi attivi
@@ -93,9 +95,11 @@ bool Controller::Init()
 	js.serializeProcessesInfo(model.getProcessesInfo());
 	
 	//Trying to start the network
-	if (!netObj.initNetwork("4444")) {
+	std::thread netInitThread{ &Network::initNetwork,&netObj,"4444" };
+
+	/*if (!netObj.initNetwork("4444")) {
 		std::cout << "Impossibile avviare la connessione di rete" << std::endl;
-	}
+	}*/
 	
 	
 	//@TODO gestire gli errori Gestire anche il caso in cui non avvenga connessione da client - la funzione deve comunque partire
@@ -241,9 +245,10 @@ void Controller::ManageHookEvent(EventInfo info) {
 	{
 	case WINDOWCREATED:		//Processo creato
 	{
-		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato" << info.eventType << std::endl;
+		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato"<< std::endl;
 		if (!model.addProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
+			
 		}
 		
 		//@TODO inviare dato al client
@@ -251,7 +256,7 @@ void Controller::ManageHookEvent(EventInfo info) {
 	}
 	case WINDOWCLOSED:		//Processo chiuso
 	{
-		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto " << info.eventType << std::endl;
+		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto"<< std::endl;
 		if (!model.removeProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
 		}
@@ -260,7 +265,7 @@ void Controller::ManageHookEvent(EventInfo info) {
 	}
 	case WINDOWFOCUSED:		//Processo ha preso il focus
 	{
-		std::wcout << "Il processo con Handle: " << info.hWnd << " ha ottenuto focus" << info.eventType << std::endl;
+		std::wcout << "Il processo con Handle: " << info.hWnd << " ha ottenuto focus"<< std::endl;
 		if (!model.setFocusedProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità settare focus
 		}
@@ -316,7 +321,7 @@ void Controller::Run()
 	//Lanciamo processo di hook a 32 bit
 	if (!CreateProcess(x86ProcessPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &x86StartupInfo, &x86ProcessInformation)) {
 		//@TODO gestire errore
-		std::cout << "Errore avvio processo monitor 32 bit " << GetLastError() << std::endl;
+		std::cout << "Errore avvio processo monitor 32 bit con errore:" << GetLastError() << std::endl;
 	}
 
 	
