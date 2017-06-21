@@ -13,13 +13,15 @@ private:
 	
 	//0 PID; 1 Stato processo; 2 titlebar; 3 path; 4 icon information
 
-	//Serialize a process information
-	boost::property_tree::wptree serializeProcessInfo(ProcessModel::processInfo);
+	//Extract single process information into ptree
+	boost::property_tree::wptree processInfoToPtree(ProcessModel::processInfo);
 
 public:
 	
 	//Serialize all processes information
 	std::wstring serializeProcessesInfo(std::list<ProcessModel::processInfo>);
+	//Serialize single process information
+	std::wstring serializeProcessInfo(ProcessModel::processInfo);
 
 };
 

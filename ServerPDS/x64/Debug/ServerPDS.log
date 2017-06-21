@@ -1,3 +1,6 @@
-﻿  Controller.cpp
+﻿  Network.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\network.cpp(168): warning C4267: 'inizializzazione': conversione da 'size_t' a 'uint32_t'. Possibile perdita di dati.
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\network.cpp(168): warning C4267: 'inizializzazione': conversione da 'size_t' a 'const uint32_t'. Possibile perdita di dati.
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\network.cpp(173): warning C4267: 'inizializzazione': conversione da 'size_t' a 'int'. Possibile perdita di dati.
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.exe
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.pdb (Full PDB)

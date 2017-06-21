@@ -50,6 +50,177 @@
 		return true;
 	}
 
+	//Reinitialize connection after a network error
+	bool Network::restartNetwork() {
+		if (!startWinsock(2, 2)) return false;
+		if (!startSocket(portNumberStr.c_str())) return false;
+		if (!acceptClient()) return false;
+
+		return true;
+	}
+
+	//Close connection 
+	void Network::closeConnection()
+	{
+		std::cout << "Chiusura del socket" << std::endl;
+		clientConnected = false;
+
+		if (hClientSocket != INVALID_SOCKET)
+			closesocket(hClientSocket);
+		std::cout << "client socket - closeConnection: " << hClientSocket << std::endl;
+		WSACleanup();
+
+	}
+
+	//Method that will be threaded
+	void Network::networkTask()
+	{
+		if (!initNetwork("4444")) {
+			std::cout << "Impossibile avviare la connessione di rete" << std::endl;
+			/*Sollevare eccezione ed uscire */
+		}
+		
+
+		while (true) {
+			if (!receiveMessages()) {
+				std::cout << "Receive message ha restituito un errore" << std::endl;
+				//Se la receive message torna false devo riavviare il socket e accettare nuove connessioni
+				//@TODO gestire la notifica della connessione e disconnessione tramite evento
+				restartNetwork();
+			}
+		}
+	}
+
+	//Method that receives network messages and communicates them to the controller
+	bool Network::receiveMessages()
+	{
+		int iSendResult;
+		int iResult;
+
+		// Receive until the peer shuts down the connection or send close connection message
+		do {
+			int idx = 0;
+			uint32_t varSize;
+			iResult = recv(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
+			if (iResult == SOCKET_ERROR) {
+				//Gestione errore
+				std::cout << "recv failed with error: \n" << WSAGetLastError() << std::endl;
+				closeConnection();
+				return false;	//ritorno dalla funzione di ricezione con errore
+			}
+
+
+			uint32_t nLeft = varSize;
+			char *recvbuf = new char[varSize];
+
+			while (nLeft > 0) {
+				iResult = recv(hClientSocket, (char*)&recvbuf[idx], nLeft, 0);
+				if (iResult == SOCKET_ERROR) {
+					//Gestione errore
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					closeConnection();
+					return false; //ritorno dalla funzione di ricezione con errore
+				}
+				nLeft -= iResult;
+				idx += iResult;
+			}
+
+			std::string totalDataStr = std::string(recvbuf);
+			totalDataStr.erase(varSize);
+			size_t tagPos = totalDataStr.find("|");
+			std::string pidStr = totalDataStr.substr(0, tagPos);	//First part of the message is the pid of the process
+			std::string keyStr = totalDataStr.substr(tagPos + 1);	//second part of the messa is the shortcut key to send at process
+
+
+																	//PASSAGGIO DELLE INFORMAZIONI AL CONTROLLER
+			messageInfo.pid = std::stoul(pidStr, nullptr, 0);
+			messageInfo.eventType = NETWORKMESSAGE;
+			messageInfo.additionalInfo = keyStr;					//Shortcut inviata dal client
+
+			pushNetworkMessage(messageInfo);
+
+			//Messaggio ricevuto, sollevo evento
+			SetEvent(networkMessageRecEvent);
+
+
+			// Echo the buffer back to the sender
+			iSendResult = send(hClientSocket, recvbuf, iResult, 0);
+			if (iSendResult == SOCKET_ERROR) {
+				printf("send failed with error: %d\n", WSAGetLastError());
+				closeConnection();
+				return false;
+			}
+			else if (iResult == 0)
+				printf("Connection closing...\n");
+
+		} while (iResult > 0);
+		return true;
+	}
+
+	int Network::sendMessage(std::wstring data)
+	{
+		wchar_t* sendbuf = new wchar_t[data.length()+1];
+		size_t lenght = data.length();
+
+		wcscpy_s(sendbuf, data.length()+1, data.c_str());
+		
+		//varSize contiene la dimensione in byte del messaggio di informazione
+		const uint32_t varSize = data.length()*sizeof(wchar_t);
+
+		int idx = 0;
+		
+		//Il numero di byte da inviare è calcolato in base alla lunghezza della stringa * la dimensione in byte di ogni carattere
+		int nLeft = data.length()*sizeof(wchar_t);		
+		int bytesSent;
+
+		//Send data size
+		send(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
+		//Send data packets
+		while (nLeft > 0) {
+			bytesSent = send(hClientSocket, (char*)&sendbuf[idx], nLeft, 0);
+			if (bytesSent == SOCKET_ERROR) {
+				//@TODO gestione degli errori
+				break;
+			}
+			nLeft -= bytesSent;
+			idx += bytesSent;
+		}
+		return idx;
+	}
+
+
+
+	//BackUpSend
+
+	//int Network::sendMessage(std::string data)
+	//{
+	//	char* sendbuf = new char[data.length()];
+
+	//	strcpy_s(sendbuf, data.length(), data.c_str());
+
+	//	const uint32_t varSize = data.length();
+
+	//	int idx = 0;
+	//	int nLeft = data.length();
+	//	int bytesSent;
+
+	//	//Send data size
+	//	send(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
+	//	//Send data packets
+	//	while (nLeft > 0) {
+	//		bytesSent = send(hClientSocket, &sendbuf[idx], nLeft, 0);
+	//		if (bytesSent == SOCKET_ERROR) {
+	//			//@TODO gestione degli errori
+	//			break;
+	//		}
+	//		nLeft -= bytesSent;
+	//		idx += bytesSent;
+	//	}
+	//	return idx;
+	//}
+
+
+
 	bool Network::getConnectionState()
 	{
 		return clientConnected;
@@ -68,86 +239,17 @@
 		}
 		return temp;
 	}
-
-	void Network::pushNetworkMessage(EventInfo info)
-	{
-		std::lock_guard<std::mutex> l(mut);
-		MessageQueue.push(info);
-	}
-
+	
 	size_t Network::getNetworkMessagesNumber()
 	{
 		std::lock_guard<std::mutex> l(mut);
 		return MessageQueue.size();
 	}
 
-	//Method that will be threaded
-	void Network::networkTask()
+	void Network::pushNetworkMessage(EventInfo info)
 	{
-		//Trying to start the network
-		if (!initNetwork("4444")) {
-			std::cout << "Impossibile avviare la connessione di rete" << std::endl;
-		}
-
-
-
-		while (true) {
-			if (!receiveMessages()) {
-				std::cout << "Receive message ha restituito un errore" << std::endl;
-				//Se la receive message torna false devo riavviare il socket e accettare nuove connessioni
-				//@TODO gestire la notifica della connessione e disconnessione tramite evento
-				restartNetwork();
-			}
-		}	
-	}
-
-	int Network::sendMessage(std::string data)
-	{
-		char* sendbuf = new char[data.length()];
-
-		strcpy_s(sendbuf, data.length(), data.c_str());
-		
-		const uint32_t varSize = data.length();
-
-		int idx = 0;		
-		int nLeft = data.length();
-		int bytesSent;
-
-		//Send data size
-		send(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
-		//Send data packets
-		while (nLeft > 0) {
-			bytesSent = send(hClientSocket, &sendbuf[idx], nLeft, 0);
-			if (bytesSent == SOCKET_ERROR) {
-				//@TODO gestione degli errori
-				break;
-			}
-			nLeft -= bytesSent;
-			idx += bytesSent;
-		}
-		return idx;
-	}
-
-	//Reinitialize connection after a network error
-	bool Network::restartNetwork() {
-		if (!startWinsock(2, 2)) return false;
-		if (!startSocket(portNumberStr.c_str())) return false;
-		if (!acceptClient()) return false;
-
-		return true;
-	}
-
-	//Close connection 
-	void Network::closeConnection()
-	{
-		std::cout << "Chiusura del socket" << std::endl;
-		clientConnected = false;
-		
-		if(hClientSocket != INVALID_SOCKET)
-			closesocket(hClientSocket);
-		std::cout << "client socket - closeConnection: " << hClientSocket << std::endl;
-		WSACleanup();
-
+		std::lock_guard<std::mutex> l(mut);
+		MessageQueue.push(info);
 	}
 
 	bool Network::startWinsock(BYTE majorVersion, BYTE minorVersion) {
@@ -247,72 +349,6 @@
 		clientConnected = true;
 		SetEvent(networkClientConnEvent);
 		
-		return true;
-	}
-
-	//Method that receives network messages and communicates them to the controller
-	bool Network::receiveMessages()
-	{		
-		int iSendResult;
-		int iResult;
-
-		// Receive until the peer shuts down the connection or send close connection message
-		do {
-			int idx = 0;			
-			uint32_t varSize;
-			iResult = recv(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
-			if (iResult == SOCKET_ERROR) {
-			//Gestione errore
-				std::cout << "recv failed with error: \n" << WSAGetLastError() << std::endl;
-			closeConnection();
-			return false;	//ritorno dalla funzione di ricezione con errore
-			}
-
-
-			uint32_t nLeft = varSize;
-			char *recvbuf = new char[varSize];
-
-			while (nLeft > 0) {
-			iResult = recv(hClientSocket, (char*)&recvbuf[idx], nLeft, 0);
-			if (iResult == SOCKET_ERROR) {
-				//Gestione errore
-				printf("recv failed with error: %d\n", WSAGetLastError());
-				closeConnection();
-				return false; //ritorno dalla funzione di ricezione con errore
-			}
-			nLeft -= iResult;
-			idx += iResult;
-			}
-							
-			std::string totalDataStr = std::string(recvbuf);
-			totalDataStr.erase(varSize);
-			size_t tagPos= totalDataStr.find("|");
-			std::string pidStr = totalDataStr.substr(0, tagPos);	//First part of the message is the pid of the process
-			std::string keyStr = totalDataStr.substr(tagPos + 1);	//second part of the messa is the shortcut key to send at process
-
-				
-			//PASSAGGIO DELLE INFORMAZIONI AL CONTROLLER
-			messageInfo.pid = std::stoul(pidStr, nullptr, 0);
-			messageInfo.eventType = NETWORKMESSAGE;
-			messageInfo.additionalInfo = keyStr;					//Shortcut inviata dal client
-
-			pushNetworkMessage(messageInfo);			
-
-			//Messaggio ricevuto, sollevo evento
-			SetEvent(networkMessageRecEvent);						
-				
-				
-			// Echo the buffer back to the sender
-			iSendResult = send(hClientSocket, recvbuf, iResult, 0);
-			if (iSendResult == SOCKET_ERROR) {
-			printf("send failed with error: %d\n", WSAGetLastError());
-			closeConnection();
-			return false;
-			}			
-			else if (iResult == 0)
-			printf("Connection closing...\n");
-			
-		} while (iResult > 0);		
 		return true;
 	}
 

@@ -21,9 +21,8 @@ private:
 	STARTUPINFO x86StartupInfo;
 	PROCESS_INFORMATION x86ProcessInformation;
 
-
-
-
+	//Json serializer utility
+	JsonSerializer jSer;
 
 
 	HANDLE hSlot;
@@ -35,7 +34,6 @@ private:
 	//Hook object
 	MyHook	myHookObj;
 	
-
 	//Network object
 	Network netObj;
 	

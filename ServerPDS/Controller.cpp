@@ -91,15 +91,14 @@ bool Controller::Init()
 	model.setProcessesList(we.getData());
 	//model.setProcessesList(we.enum_windows().getData());
 	
-	JsonSerializer js;
-	js.serializeProcessesInfo(model.getProcessesInfo());
 	
-	//Trying to start the network
-	std::thread netInitThread{ &Network::initNetwork,&netObj,"4444" };
+	////Trying to start the network
+	//std::thread netInitThread{ &Network::initNetwork,&netObj,"4444" };
 
 	/*if (!netObj.initNetwork("4444")) {
 		std::cout << "Impossibile avviare la connessione di rete" << std::endl;
 	}*/
+
 	
 	
 	//@TODO gestire gli errori Gestire anche il caso in cui non avvenga connessione da client - la funzione deve comunque partire
@@ -246,11 +245,12 @@ void Controller::ManageHookEvent(EventInfo info) {
 	case WINDOWCREATED:		//Processo creato
 	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato"<< std::endl;
+
 		if (!model.addProcess(info.hWnd)) {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
 			
-		}
-		
+		}		
+
 		//@TODO inviare dato al client
 		break;
 	}
@@ -289,6 +289,11 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 	{
 		std::cout << "Client connesso" << std::endl;
 		//@TODO Inviare La lista dei processi attivi al client
+
+		std::wstring serializedProcessesList;
+		serializedProcessesList=jSer.serializeProcessesInfo(model.getProcessesInfo());
+		
+		netObj.sendMessage(serializedProcessesList);
 		
 		ResetEvent(eventClientConNet);		
 		break;
@@ -316,6 +321,7 @@ void Controller::Run()
 {
 	//Smithers libera i thread	
 	std::thread hookThread{ &MyHook::StartMonitoringProcesses,&myHookObj };
+
 	std::thread netThread{ &Network::networkTask, &netObj};
 	
 	//Lanciamo processo di hook a 32 bit
