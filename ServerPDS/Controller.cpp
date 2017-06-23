@@ -236,40 +236,71 @@ EventInfo Controller::MessageToHandle_Event_Struct(std::wstring message)
 	return hwndEventInfo;
 }
 
-void Controller::ManageHookEvent(EventInfo info) {
+void Controller::ManageHookEvent(EventInfo info) {	
 
-	//Message elaboration
-	//Processo creato eventType==1
+	ProcessModel::processInfo pInfoTmp;		//Tupla temporanea che contiene le informazioni del processo
+	std::wstring pInfoStr;					//Stringa delle informazioni processo serializzate
+	
+
 	switch (info.eventType)
 	{
 	case WINDOWCREATED:		//Processo creato
 	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato creato"<< std::endl;
-
-		if (!model.addProcess(info.hWnd)) {
+		if (model.addProcess(info.hWnd)) {
+			pInfoTmp = model.getProcessInfo(info.hWnd);
+			//Settiamo lo stato del processo nella tupla da inviare
+			std::get<1>(pInfoTmp) = WINDOWCREATED;
+			//inviare aggiornamento al client
+			if (netObj.isConnected()) { //se il client è connesso invio i dati
+				pInfoStr =jSer.serializeProcessInfo(pInfoTmp);
+				netObj.sendMessage(pInfoStr);
+			}			
+		}
+		else {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
-			
-		}		
-
-		//@TODO inviare dato al client
+		}
+		
 		break;
 	}
 	case WINDOWCLOSED:		//Processo chiuso
 	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " e' stato distrutto"<< std::endl;
-		if (!model.removeProcess(info.hWnd)) {
+		DWORD pidTmp = model.hwndToPid(info.hWnd);	//Salvo il pid del processo prima di rimuoverlo dalla struttura dati
+		if (model.removeProcess(info.hWnd)) {		//se il processo viene rimosso correttamente invio le informazioni
+			if (netObj.isConnected()) {
+				//Creare una tupla che contiene solo pid e tipo evento, perchè le informazioni 
+				//sul processo non sono reperibili dato che è stato chiuso			
+				std::get<0>(pInfoTmp) = pidTmp;
+				std::get<1>(pInfoTmp) = WINDOWCLOSED;
+				pInfoStr = jSer.serializeProcessInfo(pInfoTmp);
+				netObj.sendMessage(pInfoStr);
+			}		
+		}
+		else {
 			//@TODO sollevare eccezione impossibilità inserire dato nel model
 		}
-		//@TODO inviare dato al client
+		
 		break;
 	}
 	case WINDOWFOCUSED:		//Processo ha preso il focus
 	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " ha ottenuto focus"<< std::endl;
-		if (!model.setFocusedProcess(info.hWnd)) {
+
+		if (model.setFocusedProcess(info.hWnd)) {			
+			//@TODO inviare dato al client
+			if (netObj.isConnected()) {
+				//Creare una tupla che contiene solo pid e tipo evento perchè le informazioni sono già a disposizione del client	
+				std::get<0>(pInfoTmp) = model.hwndToPid(info.hWnd);
+				std::get<1>(pInfoTmp) = WINDOWFOCUSED;
+				pInfoStr = jSer.serializeProcessInfo(pInfoTmp);
+				netObj.sendMessage(pInfoStr);
+			}
+		}
+		else {
 			//@TODO sollevare eccezione impossibilità settare focus
 		}
-		//@TODO inviare dato al client
+		
 		break;
 	}
 	default:
@@ -288,12 +319,15 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 	case NETCLIENTCONNECTED:	//Client connesso
 	{
 		std::cout << "Client connesso" << std::endl;
-		//@TODO Inviare La lista dei processi attivi al client
+		std::wstring processInfoStr;
+		//invio delle informazioni sui processi presenti
 
-		std::wstring serializedProcessesList;
-		serializedProcessesList=jSer.serializeProcessesInfo(model.getProcessesInfo());
-		
-		netObj.sendMessage(serializedProcessesList);
+		for (auto &processInfo : model.getProcessesInfo())
+		{
+			std::get<1>(processInfo) = WINDOWINIT;
+			processInfoStr = jSer.serializeProcessInfo(processInfo);
+			netObj.sendMessage(processInfoStr);
+		}
 		
 		ResetEvent(eventClientConNet);		
 		break;

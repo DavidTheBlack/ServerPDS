@@ -45,7 +45,7 @@ public:
 	Network();
 	~Network();
 	bool initNetwork(std::string);								//Initialize the socket and start listening for connection	
-	bool getConnectionState();									//Return true if the client is connected false otherwise
+	bool isConnected();											//Return true if the client is connected false otherwise
 
 	EventInfo getNetworkMessage();								//Return the first message in the network message queue
 	size_t getNetworkMessagesNumber();							//Return the numbr of messages in the network message queue	

@@ -99,7 +99,7 @@
 	  std::lock_guard<std::mutex> l(mut);
 	  std::list<std::pair<HWND, DWORD>>::iterator it;
 	  
-	  //Verifichiamo che il processo non sia già presente nella struttura dati
+	  //Verifichiamo che il processo sia presente nella struttura dati
 	  it = std::find_if(processesList.begin(), processesList.end(),
 		  [&pid](const std::pair<HWND, DWORD>& element) {return element.second == pid; }
 	  );
@@ -109,6 +109,27 @@
 		  return (*it).first;
 	  }
 	  return 0;
+  }
+
+  DWORD ProcessModel::hwndToPid(HWND hWnd)
+  {
+	  //1) lock della struttura dati
+	  //2) ricerca del processo
+	  //3) restituisce pid
+	  std::lock_guard<std::mutex> l(mut);
+	  std::list<std::pair<HWND, DWORD>>::iterator it;
+	  //Verifichiamo che il processo sia presente nella struttura dati
+	  it = std::find_if(processesList.begin(), processesList.end(),
+		  [&hWnd](const std::pair<HWND, DWORD>& element) {return element.first == hWnd; }
+	  );
+
+	  //Se trova elemento restituisce il pid processo
+	  if (it != processesList.end()) {
+		  return (*it).second;
+	  }
+
+	  return 0;
+
   }
 
   bool ProcessModel::setProcessesList(std::list<HWND> list) {	  
@@ -198,10 +219,12 @@
 	  }
 	  int length = GetWindowTextLength(hWnd) + 1;
 	  if (length != 0) {
-		  std::wstring windowTitle(length, '\0'); //Note that storage for a std::string is only guaranteed to be contiguous in C++11. With C++98 you should not really be using a std::string as a buffer; you should use std::vector.
-												  //Also, you should preferrably not use a cast to remove const - ness.Instead, get the address of the first element.
-		  GetWindowText(hWnd, &windowTitle[0], length);
+		  TCHAR* titleBar = new TCHAR[length];		  
+		  GetWindowText(hWnd, titleBar, length);
+		  std::wstring windowTitle(titleBar);		 
 		  std::get<2>(pI) = windowTitle;
+		  //Cancello il buffer dinamico
+		  delete[] titleBar;
 	  }
 	  else {
 		  std::get<2>(pI) = L"Finestra senza titolo";

@@ -221,7 +221,7 @@
 
 
 
-	bool Network::getConnectionState()
+	bool Network::isConnected()
 	{
 		return clientConnected;
 	}

@@ -27,7 +27,6 @@ MyHook::MyHook(LPCTSTR path): RunStopHook(NULL) {
 MyHook::~MyHook()
 {
 	UninstallHook();
-
 	FreeLibrary(hModule);
 }
 

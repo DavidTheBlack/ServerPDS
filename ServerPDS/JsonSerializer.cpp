@@ -11,6 +11,7 @@
 #include "ProcessModel.h"
 #include "JsonSerializer.h"
 
+
 boost::property_tree::wptree JsonSerializer::processInfoToPtree(ProcessModel::processInfo pInfo)
 {
 	boost::property_tree::wptree pInfoNode;
@@ -24,41 +25,41 @@ boost::property_tree::wptree JsonSerializer::processInfoToPtree(ProcessModel::pr
 	return pInfoNode;
 }
 
-std::wstring JsonSerializer::serializeProcessesInfo(std::list<ProcessModel::processInfo> pList)
-{	
-	std::wstringstream serializedJson;
-	
-	boost::property_tree::wptree processInfoNode; //nodo singolo processo
-	boost::property_tree::wptree processesInfoNode; //nodi più processi
-	boost::property_tree::wptree pListInfoRoot;
-
-	for (auto &processInfo : pList)
-	{
-		processInfoNode = processInfoToPtree(processInfo);
-		processesInfoNode.push_back(std::make_pair(L"", processInfoNode));
-	}
-	pListInfoRoot.add_child(L"Processes", processesInfoNode);	
-	
-	boost::property_tree::write_json(serializedJson, pListInfoRoot);
-
-	
-
-	return serializedJson.str();
-}
+//std::wstring JsonSerializer::serializeProcessesInfo(std::list<ProcessModel::processInfo> pList)
+//{	
+//	boost::property_tree::wptree processInfoNode; //nodo singolo processo
+//	std::wstringstream tempStream;
+//	
+//	std::wstring serializedJsonArray = L"[";
+//	
+//
+//
+//	for (auto &processInfo : pList)
+//	{
+//		processInfoNode = processInfoToPtree(processInfo);
+//		boost::property_tree::write_json(tempStream, processInfoNode);
+//		//processesInfoNode.push_back(std::make_pair(L"", processInfoNode));
+//		serializedJsonArray = serializedJsonArray + L"," + tempStream.str();
+//	}
+//	processesRootNode
+//	
+//	
+//
+//
+//	return serializedJsonArray;
+//}
 
 std::wstring JsonSerializer::serializeProcessInfo(ProcessModel::processInfo pInfo)
 {
 	std::wstringstream serializedJson;
-	std::wstring outString;
 	boost::property_tree::wptree processInfoNode; //nodo singolo processo
 
+	//Creo un vettore di 1 solo elemento
 	processInfoNode = processInfoToPtree(pInfo);
 
-	boost::property_tree::write_json(serializedJson, processInfoNode);	
-
-	serializedJson >> outString;
+	boost::property_tree::write_json(serializedJson, processInfoNode);
 	
-	return outString;
+	return serializedJson.str();
 }
 
 

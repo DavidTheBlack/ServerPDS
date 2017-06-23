@@ -18,10 +18,8 @@ private:
 	std::mutex mut;
 	//Handler del processo che detiene il focus
 	HWND focusProcess;
-
 	//Icon extractor Object
 	CIconExtractor iconExtrObj;
-
 
 public:	
 
@@ -63,8 +61,14 @@ public:
 	*/
 	bool addProcess(HWND processHwnd);
 
-	/**Restituisce il HWND del processo noto il pid*/
+	/*Restituisce il HWND del processo noto il pid*/
 	HWND pidToHwnd(DWORD pid);
+
+	/*Restituisce il pid del processo noto hWnd*/
+	DWORD hwndToPid(HWND);
+
+
+
 
 	/**
 	* Aggiunta safe di una lista di processi metodo richiamato alla prima esecuzione di windowsEnum
