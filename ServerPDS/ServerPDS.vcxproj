@@ -157,6 +157,8 @@
     <ClInclude Include="EventInfo.h" />
     <ClInclude Include="IconExtractor.h" />
     <ClInclude Include="JsonSerializer.h" />
+    <ClInclude Include="json\json-forwards.h" />
+    <ClInclude Include="json\json.h" />
     <ClInclude Include="MyHook.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="ProcessModel.h" />
@@ -168,6 +170,7 @@
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="EventInfo.cpp" />
     <ClCompile Include="IconExtractor.cpp" />
+    <ClCompile Include="jsoncpp.cpp" />
     <ClCompile Include="JsonSerializer.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="ProcessModel.cpp" />

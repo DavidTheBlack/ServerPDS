@@ -9,12 +9,11 @@
 #include <mutex>
 #include <queue>
 #include <condition_variable>
-#include <boost\property_tree\ptree.hpp>
-#include <boost\property_tree\json_parser.hpp>
 #include "EventInfo.h"
 #include "IconExtractor.h"
 #include "MyHook.h"
 #include "ProcessModel.h"
+#include "json\json.h"
 #include "JsonSerializer.h"
 #include "Network.h"
 #include "Controller.h"

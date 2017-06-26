@@ -9,13 +9,12 @@
 #include <queue>
 #include <fstream>
 #include <strsafe.h>
-#include <boost\property_tree\ptree.hpp>
-#include <boost\property_tree\json_parser.hpp>
 #include "WindowsEnum.h"
 #include "IconExtractor.h"
 #include "MyHook.h"
 #include "EventInfo.h"
 #include "ProcessModel.h"
+#include "json\json.h"
 #include "JsonSerializer.h"
 #include "Network.h"
 #include "Controller.h"
@@ -322,13 +321,10 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 		std::wstring processInfoStr;
 		//invio delle informazioni sui processi presenti
 
-		for (auto &processInfo : model.getProcessesInfo())
-		{
-			std::get<1>(processInfo) = WINDOWINIT;
-			processInfoStr = jSer.serializeProcessInfo(processInfo);
-			netObj.sendMessage(processInfoStr);
-		}
-		
+		processInfoStr = jSer.serializeProcessesInfo(model.getProcessesInfo());
+
+		netObj.sendMessage(processInfoStr);
+
 		ResetEvent(eventClientConNet);		
 		break;
 	}
