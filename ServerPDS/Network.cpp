@@ -129,11 +129,10 @@
 			totalDataStr.erase(varSize);
 			size_t tagPos = totalDataStr.find("|");
 			std::string pidStr = totalDataStr.substr(0, tagPos);	//First part of the message is the pid of the process
-			std::string keyStr = totalDataStr.substr(tagPos + 1);	//second part of the messa is the shortcut key to send at process
+			std::string keyStr = totalDataStr.substr(tagPos + 1);	//second part of the message is the shortcut key to deliver to process
 
-
-																	//PASSAGGIO DELLE INFORMAZIONI AL CONTROLLER
 			messageInfo.pid = std::stoul(pidStr, nullptr, 0);
+																	//PASSAGGIO DELLE INFORMAZIONI AL CONTROLLER
 			messageInfo.eventType = NETWORKMESSAGE;
 			messageInfo.additionalInfo = keyStr;					//Shortcut inviata dal client
 

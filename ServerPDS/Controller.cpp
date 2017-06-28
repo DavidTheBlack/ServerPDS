@@ -286,8 +286,7 @@ void Controller::ManageHookEvent(EventInfo info) {
 	{
 		std::wcout << "Il processo con Handle: " << info.hWnd << " ha ottenuto focus"<< std::endl;
 
-		if (model.setFocusedProcess(info.hWnd)) {			
-			//@TODO inviare dato al client
+		if (model.setFocusedProcess(info.hWnd)) {						
 			if (netObj.isConnected()) {
 				//Creare una tupla che contiene solo pid e tipo evento perchè le informazioni sono già a disposizione del client	
 				std::get<0>(pInfoTmp) = model.hwndToPid(info.hWnd);
@@ -332,9 +331,124 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
 	{
 		//@TODO girare shortcut al processo in focus
-		std::cout << "Processo con PID" << netEventInfo.pid << "ha ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()
-			<< std::endl << "ed ha HANDLE: " << model.pidToHwnd(netEventInfo.pid) << std::endl;
-		ProcessModel::processInfo pInfo = model.getProcessInfo(model.pidToHwnd(netEventInfo.pid));
+		//Se il processo in focus è lo stesso a cui il client ha mandato la shortcut gli passo la sequenza comandi
+		std::cout << "Processo in focus: " << model.hwndToPid(model.getFocusedProcess()) << std::endl;
+		std::cout << "Processo ricevuto via rete: " << netEventInfo.pid << std::endl;
+
+
+		if (model.hwndToPid(model.getFocusedProcess()) == netEventInfo.pid) {
+
+
+			size_t tagPos = netEventInfo.additionalInfo.find("|");
+			std::cout << "Posizione |: " << tagPos << std::endl;
+			std::string modifierKeyComboStr = netEventInfo.additionalInfo.substr(0, tagPos);	//First part of the message contains the shortcut modifiers
+			std::string keyStr = netEventInfo.additionalInfo.substr(tagPos + 1);			//second part of the message contains the key pressed
+			int modifierKeyCombo = std::stoi(modifierKeyComboStr, nullptr, 0);
+			int key = std::stoi(keyStr, nullptr, 0);
+
+			
+
+			//Combinazioni: 1 alt			1
+			//				2 ctrl			4
+			//				3 ctrl+alt		5		
+			//				4 ctrl+shift	6
+			//				5 alt+shift		3
+			//				6 ctrl+alt+shit	7
+			switch (modifierKeyCombo)
+			{
+			case 1: //alt key
+			case 4: //ctrl key
+				{
+					INPUT *ip = new INPUT[4];
+					//Press the keys
+					ip[0].type = INPUT_KEYBOARD;
+					ip[0].ki.dwFlags = 0;
+					ip[0].ki.wScan = 0;
+					ip[0].ki.time = 0;
+					ip[0].ki.dwExtraInfo = 0;
+					if (modifierKeyCombo == 1)
+						ip[0].ki.wVk = VK_MENU;
+					else
+						ip[0].ki.wVk = VK_CONTROL;
+					
+					ip[1].type = INPUT_KEYBOARD;
+					ip[1].ki.dwFlags = 0;
+					ip[1].ki.wVk = key;
+					ip[1].ki.wScan = 0;
+					ip[1].ki.time = 0;
+					ip[1].ki.dwExtraInfo = 0;
+
+					//Release the keys
+					ip[2].type = INPUT_KEYBOARD;
+					ip[2].ki.dwFlags = KEYEVENTF_KEYUP;
+					ip[2].ki.wScan = 0;
+					ip[2].ki.time = 0;
+					ip[2].ki.dwExtraInfo = 0;
+					
+					if (modifierKeyCombo == 1)
+						ip[2].ki.wVk = VK_MENU;
+					else
+						ip[2].ki.wVk = VK_CONTROL;
+
+
+
+
+					ip[3].type = INPUT_KEYBOARD;
+					ip[3].ki.dwFlags = KEYEVENTF_KEYUP;
+					ip[3].ki.wScan = 0;
+					ip[3].ki.time = 0;
+					ip[3].ki.dwExtraInfo = 0;
+
+					ip[3].ki.wVk = key;
+					SendInput(4, ip, sizeof(INPUT));
+
+
+					break;
+				}
+				
+			default:
+				break;
+			}
+
+
+
+
+
+			/*TEST PER INVIARE HOTKEY ALLA FINESTRA*/
+
+			//INPUT ip;
+			//ip.type = INPUT_KEYBOARD;
+			//ip.ki.wScan = 0;
+			//ip.ki.time = 0;
+			//ip.ki.dwExtraInfo = 0;
+
+			//// Press the "Modifier" keys
+			//ip.ki.wVk = modKey;
+			//ip.ki.dwFlags = 0; // 0 for key press
+			//SendInput(1, &ip, sizeof(INPUT));
+
+			//// Press the key
+			//ip.ki.wVk = key;
+			//ip.ki.dwFlags = 0; // 0 for key press
+			//SendInput(1, &ip, sizeof(INPUT));
+
+			//// Release the key
+			//ip.ki.wVk = key;
+			//ip.ki.dwFlags = KEYEVENTF_KEYUP;
+			//SendInput(1, &ip, sizeof(INPUT));
+
+			//// Release the modifier keys
+			//ip.ki.wVk = modKey;
+			//ip.ki.dwFlags = KEYEVENTF_KEYUP;
+			//SendInput(1, &ip, sizeof(INPUT));
+			///*FINE TEST PER INVIARE HOTKEY ALLA FINESTRA*/
+
+		}
+
+		
+
+
+		std::cout << "hai ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()<< std::endl;
 
 
 
