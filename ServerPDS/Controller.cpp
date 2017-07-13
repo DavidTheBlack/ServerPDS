@@ -237,7 +237,10 @@ EventInfo Controller::MessageToHandle_Event_Struct(std::wstring message)
 
 void Controller::ManageHookEvent(EventInfo info) {	
 
-	ProcessModel::processInfo pInfoTmp;		//Tupla temporanea che contiene le informazioni del processo
+	//Tupla temporanea che contiene le informazioni del processo
+	//Inizializzazione della tupla per evitare di inviare dati vuoti
+	ProcessModel::processInfo pInfoTmp = {0,0,L"titleBar",L"Path","Icon"};		
+											
 	std::wstring pInfoStr;					//Stringa delle informazioni processo serializzate
 	
 
