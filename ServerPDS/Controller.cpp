@@ -21,7 +21,7 @@
 
 
 Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms1")), 
-	x86ProcessPath(L"D:\\PoliTo\\Materie\\PdS\\Progetto\\32BitCode\\ProcessMonitorX86.exe")
+	x86ProcessPath(L"..\\x64\\Debug\\32BitCode\\ProcessMonitorX86.exe")
 {
 	//Inizializzazione strutture dati necessarie alla creazione processo monitor 32 bit
 	ZeroMemory(&x86StartupInfo, sizeof(x86StartupInfo));
@@ -239,7 +239,7 @@ void Controller::ManageHookEvent(EventInfo info) {
 
 	//Tupla temporanea che contiene le informazioni del processo
 	//Inizializzazione della tupla per evitare di inviare dati vuoti
-	ProcessModel::processInfo pInfoTmp = {0,0,L"titleBar",L"Path","Icon"};		
+	ProcessModel::processInfo pInfoTmp = {0,0,L"Title",L"Path","Icon"};		
 											
 	std::wstring pInfoStr;					//Stringa delle informazioni processo serializzate
 	

@@ -50,7 +50,7 @@ Json::Value JsonSerializer::processInfoToJNode(ProcessModel::processInfo pInfo)
 	delete[] tmpBuf;
 	tmpBuf = NULL;
 
-	//jNode["icon"] = std::get<4>(pInfo);
+	jNode["icon"] = std::get<4>(pInfo);
 	
 	return jNode;
 }

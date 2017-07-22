@@ -183,8 +183,8 @@
   ProcessModel::processInfo ProcessModel::getProcessInfo(HWND hWnd)
   {
 
-	  //1) lock della struttura dati
-	  //2) Reperisco informazioni sul processo
+	  //1) Lock the data structure
+	  //2) Retrieve the process information
 	  std::lock_guard<std::mutex> l(mut);
 	  
 	  HANDLE hProcess;
@@ -217,13 +217,15 @@
 			  CloseHandle(hProcess);
 		  }
 	  }
+
+	  //Grab the titlebar information
 	  int length = GetWindowTextLength(hWnd) + 1;
-	  if (length != 0) {
+	  if (length >1 )  { //We count also the terminator character
 		  TCHAR* titleBar = new TCHAR[length];		  
 		  GetWindowText(hWnd, titleBar, length);
 		  std::wstring windowTitle(titleBar);		 
 		  std::get<2>(pI) = windowTitle;
-		  //Cancello il buffer dinamico
+		  //Delete the dinamic buffer
 		  delete[] titleBar;
 	  }
 	  else {
@@ -231,15 +233,16 @@
 	  }
 	  
 
-	  //AGGIUNGERE INFORMAZIONI SULL'ICONA
+	  //Extract the icon information
 	  std::string stringIcon;
-	  if (iconExtrObj.ExtracttIcon(std::get<3>(pI), stringIcon)) {
-		  //Aggiungere eccezione per gestire errore di estrazione icona
+	  if (iconExtrObj.ExtracttIcon(std::get<3>(pI), stringIcon)==NO_ERROR) {
+		  std::get<4>(pI) = stringIcon;
 	  }
-	  std::get<4>(pI) = stringIcon;
-
-
-
+	  else {
+		  //If there is no icon save NoIcon String
+		  std::get<4>(pI) = "NoIcon";
+	  }
+	  
 	  return pI;	  
   }
 
