@@ -2,6 +2,11 @@
 
 const int MAX_ICONS = 5;
 
+
+
+
+
+
 // The following structures are taken from iconpro sdk example
 #pragma pack( push )
 #pragma pack( 2 )
@@ -70,6 +75,7 @@ class CIconExtractor
 public:    
 	CIconExtractor();
 
+
 	//Extract icon information in string starting from the process path
 	DWORD ExtracttIcon(std::wstring processPath, std::string &iconString);
 
@@ -77,6 +83,21 @@ protected:
 	BOOL AddResourceProc(LPCTSTR lpszType, LPTSTR lpszName);
 
 private:
+
+	std::string base64_encode(unsigned char*, unsigned int len);
+
+	const std::string base64_chars =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz"
+		"0123456789+/";
+
+	inline bool is_base64(unsigned char c) {
+		return (isalnum(c) || (c == '+') || (c == '/'));
+	}
+
+
+
+
 	//Write the data bytes of the icon to target string
 	DWORD WriteIconToICOString(LPICONRESOURCE lpIR, std::string& targetString);
     
