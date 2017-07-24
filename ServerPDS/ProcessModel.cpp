@@ -9,6 +9,11 @@
 #include "ProcessModel.h"
 
 
+ProcessModel::ProcessModel() {
+
+
+
+};
 
   /**
   * Set the value of FocusedProcessPid
@@ -37,7 +42,7 @@
   /**
   * Get the value of FocusedProcessPid
   * Pid del processo che attualmente ha il focus
-  * @return the value of FocusedProcessPid
+  * @return the value of FocusedProcess HWND
   */
   HWND ProcessModel::getFocusedProcess() {
 	  std::lock_guard<std::mutex> l(mut);
@@ -235,15 +240,43 @@
 
 	  //Extract the icon information
 	  std::string stringIcon;
-	  if (iconExtrObj.ExtracttIcon(std::get<3>(pI), stringIcon)==NO_ERROR) {
-		  std::get<4>(pI) = stringIcon;
-	  }
-	  else {
+
+
+	  LPCWSTR applicationPath = std::get<3>(pI).c_str();
+	  DWORD applicationType;
+	  //Reperiamo il tipo di eseguibile 64 o 32 bit
+	  GetBinaryTypeW(applicationPath, &applicationType);
+
+	  if (applicationType == SCS_32BIT_BINARY) {
+		  //Applicazione a 32bit
 		  //If there is no icon save NoIcon String
+		  
+		  /*
+		  if(path a 32bit){
+		  /*scrivi in mailSlot del processo a 32 bit il path del processo di cui ricavare l'icona
+		  solelva evento che sveglia il processo x86
+		  attendi evento che notifica la consegna dell'icona
+		  prosegui
+		  */
+
+
+
 		  std::get<4>(pI) = "NoIcon";
 	  }
+	  else if (applicationType == SCS_64BIT_BINARY) {
+		  //Applicazione a 64bit
+		  if (iconExtrObj.ExtracttIcon(std::get<3>(pI), stringIcon) == NO_ERROR) {
+			  std::get<4>(pI) = stringIcon;
+		  }
+		  else {
+			  //If there is no icon save NoIcon String
+			  std::get<4>(pI) = "NoIcon";
+		  }
+	  }
 	  
-	  return pI;	  
+	  return pI;
+
+	  	  
   }
 
   //Restituisce una lisa di tutti i processi presenti nel pc con le informazioni relative ad ogni processo

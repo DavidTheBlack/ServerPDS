@@ -54,6 +54,9 @@
     <ClInclude Include="json\json-forwards.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="MailSlotObj.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -87,6 +90,9 @@
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="jsoncpp.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="MailSlotObj.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>

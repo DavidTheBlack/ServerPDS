@@ -187,39 +187,6 @@
 		return idx;
 	}
 
-
-
-	//BackUpSend
-
-	//int Network::sendMessage(std::string data)
-	//{
-	//	char* sendbuf = new char[data.length()];
-
-	//	strcpy_s(sendbuf, data.length(), data.c_str());
-
-	//	const uint32_t varSize = data.length();
-
-	//	int idx = 0;
-	//	int nLeft = data.length();
-	//	int bytesSent;
-
-	//	//Send data size
-	//	send(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
-	//	//Send data packets
-	//	while (nLeft > 0) {
-	//		bytesSent = send(hClientSocket, &sendbuf[idx], nLeft, 0);
-	//		if (bytesSent == SOCKET_ERROR) {
-	//			//@TODO gestione degli errori
-	//			break;
-	//		}
-	//		nLeft -= bytesSent;
-	//		idx += bytesSent;
-	//	}
-	//	return idx;
-	//}
-
-
-
 	bool Network::isConnected()
 	{
 		return clientConnected;
@@ -232,13 +199,13 @@
 		if (MessageQueue.empty()) {
 			temp.additionalInfo = "Empty";
 		}
-		else {			
+		else {
 			temp = MessageQueue.front();
 			MessageQueue.pop();
 		}
 		return temp;
 	}
-	
+
 	size_t Network::getNetworkMessagesNumber()
 	{
 		std::lock_guard<std::mutex> l(mut);
@@ -254,7 +221,7 @@
 	bool Network::startWinsock(BYTE majorVersion, BYTE minorVersion) {
 
 		WSADATA wsaData;
-		std::cout << "Initializing winsock... "<<std::endl;
+		std::cout << "Initializing winsock... " << std::endl;
 		/* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
 		WORD wVersionRequested = MAKEWORD(minorVersion, majorVersion);
 		iResult = WSAStartup(wVersionRequested, &wsaData);
@@ -336,18 +303,18 @@
 		return true;
 	}
 
-	bool Network::acceptClient() {						
+	bool Network::acceptClient() {
 		// Accept a client socket connection
 		hClientSocket = accept(hSocket, NULL, NULL);
 		if (hClientSocket == INVALID_SOCKET) {
 			errorShow(TEXT("accept"));
 			closeConnection();
 			return false;
-		}				
+		}
 		closesocket(hSocket);
 		clientConnected = true;
 		SetEvent(networkClientConnEvent);
-		
+
 		return true;
 	}
 
@@ -384,4 +351,39 @@
 	}
 
 
+
+
+
+	//BackUpSend
+
+	//int Network::sendMessage(std::string data)
+	//{
+	//	char* sendbuf = new char[data.length()];
+
+	//	strcpy_s(sendbuf, data.length(), data.c_str());
+
+	//	const uint32_t varSize = data.length();
+
+	//	int idx = 0;
+	//	int nLeft = data.length();
+	//	int bytesSent;
+
+	//	//Send data size
+	//	send(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
+	//	//Send data packets
+	//	while (nLeft > 0) {
+	//		bytesSent = send(hClientSocket, &sendbuf[idx], nLeft, 0);
+	//		if (bytesSent == SOCKET_ERROR) {
+	//			//@TODO gestione degli errori
+	//			break;
+	//		}
+	//		nLeft -= bytesSent;
+	//		idx += bytesSent;
+	//	}
+	//	return idx;
+	//}
+
+
+
+	
 

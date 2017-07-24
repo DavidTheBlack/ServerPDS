@@ -7,6 +7,7 @@
 #define WINDOWFOCUSED 3
 #define NETCLIENTCONNECTED 4
 #define NETWORKMESSAGE 5
+#define NETWORKEXIT -10			//Used to communicate to close the connection
 
 
 

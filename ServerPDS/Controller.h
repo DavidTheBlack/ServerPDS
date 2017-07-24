@@ -24,7 +24,7 @@ private:
 	//Json serializer utility
 	JsonSerializer jSer;
 
-
+	//MailSlot 
 	HANDLE hSlot;
 	LPTSTR Slot;
 

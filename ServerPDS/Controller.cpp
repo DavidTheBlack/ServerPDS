@@ -321,16 +321,25 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 	{
 		std::cout << "Client connesso" << std::endl;
 		std::wstring processInfoStr;
+		std::wstring focusedProcessInfoStr;
+
 		//invio delle informazioni sui processi presenti
-
 		processInfoStr = jSer.serializeProcessesInfo(model.getProcessesInfo());
-
 		netObj.sendMessage(processInfoStr);
-
+		
+		
+		//Invio del processo in focus
+		//Creare una tupla che contiene solo pid e tipo evento perchè le informazioni sono già a disposizione del client
+		ProcessModel::processInfo pInfoTmp = { 0,0,L"Title",L"Path","Icon" };
+		std::get<0>(pInfoTmp) = model.hwndToPid(model.getFocusedProcess());
+		std::get<1>(pInfoTmp) = WINDOWFOCUSED;
+		focusedProcessInfoStr = jSer.serializeProcessInfo(pInfoTmp);
+		netObj.sendMessage(focusedProcessInfoStr);
 		ResetEvent(eventClientConNet);		
 		break;
 	}
-		
+	
+
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
 	{
 		//@TODO girare shortcut al processo in focus
@@ -338,7 +347,7 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 		std::cout << "Processo in focus: " << model.hwndToPid(model.getFocusedProcess()) << std::endl;
 		std::cout << "Processo ricevuto via rete: " << netEventInfo.pid << std::endl;
 
-
+		//Case do ricezione di una shortcut da inviare al processo corrente
 		if (model.hwndToPid(model.getFocusedProcess()) == netEventInfo.pid) {
 
 
@@ -448,8 +457,12 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 
 		}
 
-		
-
+		//Caso chiusura della connessione da parte del client
+		if (netEventInfo.pid == NETWORKEXIT) {
+			if (netObj.isConnected()) { //se il client è connesso invio la stringa di uscita
+				netObj.sendMessage(L"-10|exit");
+			}
+		}	
 
 		std::cout << "hai ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()<< std::endl;
 
