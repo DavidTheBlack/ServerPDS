@@ -3,7 +3,7 @@
 
 class MailSlotObj
 {
-private:
+public:
 	//MailSlot used to retrieve information about icon for 32bit process
 	HANDLE hSlot;
 	LPTSTR SlotName;

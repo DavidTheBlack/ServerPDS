@@ -18,7 +18,7 @@ CIconExtractor::CIconExtractor()
 DWORD CIconExtractor::ExtracttIcon(std::wstring processPath, std::string &iconString)
 {
     
-	HINSTANCE hResource = LoadLibrary(processPath.c_str());
+	HINSTANCE hResource = LoadLibraryEx(processPath.c_str(),NULL,LOAD_LIBRARY_AS_DATAFILE);
 	if (hResource == NULL)
 	{
 		return	GetLastError();

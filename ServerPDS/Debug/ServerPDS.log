@@ -1,8 +1,11 @@
 ﻿  MyHook.cpp
-  Controller.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(28): error C3646: 'serverMailSlot': identificatore di override sconosciuto
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(28): error C4430: identificatore di tipo mancante, verrà utilizzato int. Nota: default-int non è più supportato in C++
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(29): error C3646: 'processx86MailSlot': identificatore di override sconosciuto
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(29): error C4430: identificatore di tipo mancante, verrà utilizzato int. Nota: default-int non è più supportato in C++
+  JsonSerializer.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(28): error C3646: 'serverMailSlot': identificatore di override sconosciuto
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(28): error C4430: identificatore di tipo mancante, verrà utilizzato int. Nota: default-int non è più supportato in C++
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(29): error C3646: 'processx86MailSlot': identificatore di override sconosciuto
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\processmodel.h(29): error C4430: identificatore di tipo mancante, verrà utilizzato int. Nota: default-int non è più supportato in C++
   Generazione del codice in corso...
-  Compilazione in corso...
-  main.cpp
-  Generazione del codice in corso...
-  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\Debug\ServerPDS.exe
-  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\Debug\ServerPDS.pdb (Full PDB)

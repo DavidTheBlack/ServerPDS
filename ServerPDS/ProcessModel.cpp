@@ -6,14 +6,11 @@
 #include <string>
 #include <Windows.h>
 #include "IconExtractor.h"
+#include "MailSlotObj.h"
 #include "ProcessModel.h"
 
 
-ProcessModel::ProcessModel() {
 
-
-
-};
 
   /**
   * Set the value of FocusedProcessPid
@@ -187,7 +184,6 @@ ProcessModel::ProcessModel() {
 
   ProcessModel::processInfo ProcessModel::getProcessInfo(HWND hWnd)
   {
-
 	  //1) Lock the data structure
 	  //2) Retrieve the process information
 	  std::lock_guard<std::mutex> l(mut);
@@ -197,82 +193,57 @@ ProcessModel::ProcessModel() {
 
 
 
-	  GetWindowThreadProcessId(hWnd, &std::get<0>(pI)); //retrieves the identifier of the process that created the window
+	GetWindowThreadProcessId(hWnd, &std::get<0>(pI)); //retrieves the identifier of the process that created the window
 
 
 
-	  if ((hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
-		  FALSE,
-		  std::get<0>(pI))) == NULL) // open an existing local process object returning an open handle to the specified process
-	  {
-		  std::cerr << "OpenProcess() failed: " << GetLastError() << "\n " << std::get<0>(pI) << std::endl;
-	  }
-	  else
-	  {
-		  TCHAR name[MAX_PATH];
-		  DWORD nameLength = MAX_PATH;
-		  if (!QueryFullProcessImageName(hProcess, 0, name, &nameLength))  //retrieves the full name of the executable image for the specified process
-		  {
-			  std::cerr << "QueryFullProcessImageName() failed: " <<
-				  GetLastError() << "\n";
-		  }
-		  else
-		  {
-			  std::get<3>(pI) = std::wstring(name);
-			  CloseHandle(hProcess);
-		  }
-	  }
+	if ((hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,
+		FALSE,
+		std::get<0>(pI))) == NULL) // open an existing local process object returning an open handle to the specified process
+	{
+		std::cerr << "OpenProcess() failed: " << GetLastError() << "\n " << std::get<0>(pI) << std::endl;
+	}
+	else
+	{
+		TCHAR name[MAX_PATH];
+		DWORD nameLength = MAX_PATH;
+		if (!QueryFullProcessImageName(hProcess, 0, name, &nameLength))  //retrieves the full name of the executable image for the specified process
+		{
+			std::cerr << "QueryFullProcessImageName() failed: " <<
+				GetLastError() << "\n";
+		}
+		else
+		{
+			std::get<3>(pI) = std::wstring(name);
+			CloseHandle(hProcess);
+		}
+	}
 
-	  //Grab the titlebar information
-	  int length = GetWindowTextLength(hWnd) + 1;
-	  if (length >1 )  { //We count also the terminator character
-		  TCHAR* titleBar = new TCHAR[length];		  
-		  GetWindowText(hWnd, titleBar, length);
-		  std::wstring windowTitle(titleBar);		 
-		  std::get<2>(pI) = windowTitle;
-		  //Delete the dinamic buffer
-		  delete[] titleBar;
-	  }
-	  else {
-		  std::get<2>(pI) = L"Finestra senza titolo";
-	  }
+	//Grab the titlebar information
+	int length = GetWindowTextLength(hWnd) + 1;
+	if (length >1 )  { //We count also the terminator character
+		TCHAR* titleBar = new TCHAR[length];		  
+		GetWindowText(hWnd, titleBar, length);
+		std::wstring windowTitle(titleBar);		 
+		std::get<2>(pI) = windowTitle;
+		//Delete the dinamic buffer
+		delete[] titleBar;
+	}
+	else {
+		std::get<2>(pI) = L"Finestra senza titolo";
+	}
 	  
 
-	  //Extract the icon information
-	  std::string stringIcon;
-
-
-	  LPCWSTR applicationPath = std::get<3>(pI).c_str();
-	  DWORD applicationType;
-	  //Reperiamo il tipo di eseguibile 64 o 32 bit
-	  GetBinaryTypeW(applicationPath, &applicationType);
-
-	  if (applicationType == SCS_32BIT_BINARY) {
-		  //Applicazione a 32bit
-		  //If there is no icon save NoIcon String
-		  
-		  /*
-		  if(path a 32bit){
-		  /*scrivi in mailSlot del processo a 32 bit il path del processo di cui ricavare l'icona
-		  solelva evento che sveglia il processo x86
-		  attendi evento che notifica la consegna dell'icona
-		  prosegui
-		  */
-
-
-
-		  std::get<4>(pI) = "NoIcon";
-	  }
-	  else if (applicationType == SCS_64BIT_BINARY) {
-		  //Applicazione a 64bit
-		  if (iconExtrObj.ExtracttIcon(std::get<3>(pI), stringIcon) == NO_ERROR) {
-			  std::get<4>(pI) = stringIcon;
-		  }
-		  else {
-			  //If there is no icon save NoIcon String
-			  std::get<4>(pI) = "NoIcon";
-		  }
-	  }
+		//Extract the icon information
+		std::string stringIcon;
+	
+		if (iconExtrObj.ExtracttIcon(std::get<3>(pI), stringIcon) == NO_ERROR) {
+			std::get<4>(pI) = stringIcon;
+		}
+		else {
+			//If there is no icon save NoIcon String
+			std::get<4>(pI) = "NoIcon";
+		}
 	  
 	  return pI;
 

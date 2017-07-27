@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <mutex>
 #include "IconExtractor.h"
+#include "MailSlotObj.h"
 #include "ProcessModel.h"
 #include "json\json.h"
 #include "JsonSerializer.h"

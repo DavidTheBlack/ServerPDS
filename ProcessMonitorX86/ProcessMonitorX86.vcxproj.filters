@@ -27,6 +27,12 @@
     <ClInclude Include="MyHook.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="MailSlotObj.h">
+      <Filter>File di origine</Filter>
+    </ClInclude>
+    <ClInclude Include="IconExtractor.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -36,6 +42,12 @@
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="MyHook.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="MailSlotObj.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="IconExtractor.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>

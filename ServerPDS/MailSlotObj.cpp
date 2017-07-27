@@ -5,19 +5,7 @@
 
 
 
-bool MailSlotObj::MakeSlot(LPTSTR lpszSlotName)
-{	
-	hSlot = CreateMailslot(lpszSlotName,
-		0,                             // no maximum message size 
-		MAILSLOT_WAIT_FOREVER,         // no time-out for operations 
-		(LPSECURITY_ATTRIBUTES)NULL); // default security
 
-	if (hSlot == INVALID_HANDLE_VALUE)
-	{
-		return false;
-	}
-	return true;
-}
 
 
 MailSlotObj::MailSlotObj(LPTSTR mailSlotName, bool Type)
@@ -46,6 +34,20 @@ MailSlotObj::MailSlotObj(LPTSTR mailSlotName, bool Type)
 MailSlotObj::~MailSlotObj()
 {
 	CloseHandle(hSlot);
+}
+
+bool MailSlotObj::MakeSlot(LPTSTR lpszSlotName)
+{
+	hSlot = CreateMailslot(lpszSlotName,
+		0,                             // no maximum message size 
+		MAILSLOT_WAIT_FOREVER,         // no time-out for operations 
+		(LPSECURITY_ATTRIBUTES)NULL); // default security
+
+	if (hSlot == INVALID_HANDLE_VALUE)
+	{
+		return false;
+	}
+	return true;
 }
 
 bool MailSlotObj::ReadSlot()

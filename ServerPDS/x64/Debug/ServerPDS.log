@@ -1,6 +1,7 @@
-﻿  Controller.cpp
-  Generazione del codice in corso...
-  Omissione in corso... (nessuna modifica importante rilevata)
-  JsonSerializer.cpp
+﻿  IconExtractor.cpp
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(370): warning C4311: 'cast di tipo': troncamento puntatore da 'LPTSTR' a 'ULONG'
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(370): warning C4302: 'cast di tipo': troncamento da 'LPTSTR' a 'ULONG'
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(372): warning C4311: 'cast di tipo': troncamento puntatore da 'LPTSTR' a 'ULONG'
+c:\users\david\documents\visual studio 2015\projects\serverpds\serverpds\iconextractor.cpp(372): warning C4302: 'cast di tipo': troncamento da 'LPTSTR' a 'ULONG'
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.exe
   ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Debug\ServerPDS.pdb (Full PDB)

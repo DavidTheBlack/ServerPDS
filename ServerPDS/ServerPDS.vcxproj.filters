@@ -21,9 +21,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>File di intestazione</Filter>
-    </ClInclude>
     <ClInclude Include="MyHook.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
@@ -56,6 +53,9 @@
     </ClInclude>
     <ClInclude Include="MailSlotObj.h">
       <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>File di origine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
