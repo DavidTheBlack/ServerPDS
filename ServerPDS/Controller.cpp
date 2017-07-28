@@ -351,76 +351,120 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 		if (model.hwndToPid(model.getFocusedProcess()) == netEventInfo.pid) {
 
 
-			size_t tagPos = netEventInfo.additionalInfo.find("|");
-			std::cout << "Posizione |: " << tagPos << std::endl;
-			std::string modifierKeyComboStr = netEventInfo.additionalInfo.substr(0, tagPos);	//First part of the message contains the shortcut modifiers
+			size_t tagPos = netEventInfo.additionalInfo.find("/"); //Tag di separazione della descrizione del comando e del codice tasto
+			std::cout << "Posizione /: " << tagPos << std::endl;
+
+
+			std::string keyEventType = netEventInfo.additionalInfo.substr(0, tagPos);	//First part of the message contains the action performed on the key
 			std::string keyStr = netEventInfo.additionalInfo.substr(tagPos + 1);			//second part of the message contains the key pressed
-			int modifierKeyCombo = std::stoi(modifierKeyComboStr, nullptr, 0);
+
 			int key = std::stoi(keyStr, nullptr, 0);
 
-			
+			INPUT *ip = new INPUT;
 
-			//Combinazioni: 1 alt			1
-			//				2 ctrl			4
-			//				3 ctrl+alt		5		
-			//				4 ctrl+shift	6
-			//				5 alt+shift		3
-			//				6 ctrl+alt+shit	7
-			switch (modifierKeyCombo)
-			{
-			case 1: //alt key
-			case 4: //ctrl key
-				{
-					INPUT *ip = new INPUT[4];
-					//Press the keys
-					ip[0].type = INPUT_KEYBOARD;
-					ip[0].ki.dwFlags = 0;
-					ip[0].ki.wScan = 0;
-					ip[0].ki.time = 0;
-					ip[0].ki.dwExtraInfo = 0;
-					if (modifierKeyCombo == 1)
-						ip[0].ki.wVk = VK_MENU;
-					else
-						ip[0].ki.wVk = VK_CONTROL;
-					
-					ip[1].type = INPUT_KEYBOARD;
-					ip[1].ki.dwFlags = 0;
-					ip[1].ki.wVk = key;
-					ip[1].ki.wScan = 0;
-					ip[1].ki.time = 0;
-					ip[1].ki.dwExtraInfo = 0;
-
-					//Release the keys
-					ip[2].type = INPUT_KEYBOARD;
-					ip[2].ki.dwFlags = KEYEVENTF_KEYUP;
-					ip[2].ki.wScan = 0;
-					ip[2].ki.time = 0;
-					ip[2].ki.dwExtraInfo = 0;
-					
-					if (modifierKeyCombo == 1)
-						ip[2].ki.wVk = VK_MENU;
-					else
-						ip[2].ki.wVk = VK_CONTROL;
-
-
-
-
-					ip[3].type = INPUT_KEYBOARD;
-					ip[3].ki.dwFlags = KEYEVENTF_KEYUP;
-					ip[3].ki.wScan = 0;
-					ip[3].ki.time = 0;
-					ip[3].ki.dwExtraInfo = 0;
-
-					ip[3].ki.wVk = key;
-					SendInput(4, ip, sizeof(INPUT));
-
-
-					break;
+			if (keyEventType.compare("dw") == 0) {	//If user has pressed the key
+				ip->type = INPUT_KEYBOARD;
+				ip->ki.dwFlags = 0;					//Key pressed
+				ip->ki.wScan = 0;
+				ip->ki.time = 0;
+				ip->ki.dwExtraInfo = 0;
+				if (keyStr.compare(ALT_KEY) == 0) {
+					ip->ki.wVk = VK_MENU;
 				}
+				else if (keyStr.compare(CTRL_KEY) == 0) {
+					ip->ki.wVk = VK_CONTROL;
+				}
+				else if (keyStr.compare(SHIFT_KEY) == 0) {
+					ip->ki.wVk = VK_SHIFT;
+				}
+				else {
+					ip->ki.wVk = key;
+				}
+
+				SendInput(1, ip, sizeof(INPUT));
+					
+			}else if(keyEventType.compare("up") == 0){ //If user has released the key
+
+				ip->type = INPUT_KEYBOARD;
+				ip->ki.dwFlags = KEYEVENTF_KEYUP;		//Key released
+				ip->ki.wScan = 0;
+				ip->ki.time = 0;
+				ip->ki.dwExtraInfo = 0;
 				
-			default:
-				break;
+				if (keyStr.compare(ALT_KEY) == 0) {
+					ip->ki.wVk = VK_MENU;
+				}
+				else if (keyStr.compare(CTRL_KEY) == 0) {
+					ip->ki.wVk = VK_CONTROL;
+				}
+				else if (keyStr.compare(SHIFT_KEY) == 0) {
+					ip->ki.wVk = VK_SHIFT;
+				}
+				else {
+					ip->ki.wVk = key;
+				}
+				SendInput(1, ip, sizeof(INPUT));
+
 			}
+
+
+
+			////Combinazioni: 1 alt			1
+			////				2 ctrl			4
+			////				3 ctrl+alt		5		
+			////				4 ctrl+shift	6
+			////				5 alt+shift		3
+			////				6 ctrl+alt+shit	7
+			//switch (modifierKeyCombo)
+			//{
+			//case 0:
+			//case 1: //alt key
+			//case 4: //ctrl key
+			//{
+			//	INPUT *ip = new INPUT[4];
+			//	//Press the keys
+			//	ip[0].type = INPUT_KEYBOARD;
+			//	ip[0].ki.dwFlags = 0;
+			//	ip[0].ki.wScan = 0;
+			//	ip[0].ki.time = 0;
+			//	ip[0].ki.dwExtraInfo = 0;
+			//	if (modifierKeyCombo == 1)
+			//		ip[0].ki.wVk = VK_MENU;
+			//	else
+			//		ip[0].ki.wVk = VK_CONTROL;
+
+			//	ip[1].type = INPUT_KEYBOARD;
+			//	ip[1].ki.dwFlags = 0;
+			//	ip[1].ki.wVk = key;
+			//	ip[1].ki.wScan = 0;
+			//	ip[1].ki.time = 0;
+			//	ip[1].ki.dwExtraInfo = 0;
+
+			//	//Release the keys
+			//	ip[2].type = INPUT_KEYBOARD;
+			//	ip[2].ki.dwFlags = KEYEVENTF_KEYUP;
+			//	ip[2].ki.wScan = 0;
+			//	ip[2].ki.time = 0;
+			//	ip[2].ki.dwExtraInfo = 0;
+
+			//	if (modifierKeyCombo == 1)
+			//		ip[2].ki.wVk = VK_MENU;
+			//	else
+			//		ip[2].ki.wVk = VK_CONTROL;
+
+			//	ip[3].type = INPUT_KEYBOARD;
+			//	ip[3].ki.dwFlags = KEYEVENTF_KEYUP;
+			//	ip[3].ki.wScan = 0;
+			//	ip[3].ki.time = 0;
+			//	ip[3].ki.dwExtraInfo = 0;
+
+			//	ip[3].ki.wVk = key;
+			//	SendInput(4, ip, sizeof(INPUT));
+			//	break;
+
+			//}
+			
+			//}
 
 
 

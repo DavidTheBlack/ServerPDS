@@ -2,12 +2,21 @@
 #define CONTROLLER_H
 
 
+
+//Define for key combo control
+#define ALT_KEY "alt"
+#define CTRL_KEY "ctrl"
+#define SHIFT_KEY "shift"
+
+
+
 /**
   * class Controller
   * Controlla gli eventi del ProcessMonitor e WindowsPolling, chiama i metodi di
   * aggiornamento del modello e notifica i cambiamenti al client tramite la classe
   * socket
   */
+
 
 class Controller
 {
