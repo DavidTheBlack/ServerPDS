@@ -4,9 +4,9 @@
 
 
 //Define for key combo control
-#define ALT_KEY "alt"
-#define CTRL_KEY "ctrl"
-#define SHIFT_KEY "shift"
+#define ALT_KEY "0"
+#define CTRL_KEY "162"
+#define SHIFT_KEY "160"
 
 
 

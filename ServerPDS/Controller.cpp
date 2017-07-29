@@ -342,7 +342,6 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
 	{
-		//@TODO girare shortcut al processo in focus
 		//Se il processo in focus è lo stesso a cui il client ha mandato la shortcut gli passo la sequenza comandi
 		std::cout << "Processo in focus: " << model.hwndToPid(model.getFocusedProcess()) << std::endl;
 		std::cout << "Processo ricevuto via rete: " << netEventInfo.pid << std::endl;
@@ -354,13 +353,22 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 			size_t tagPos = netEventInfo.additionalInfo.find("/"); //Tag di separazione della descrizione del comando e del codice tasto
 			std::cout << "Posizione /: " << tagPos << std::endl;
 
-
 			std::string keyEventType = netEventInfo.additionalInfo.substr(0, tagPos);	//First part of the message contains the action performed on the key
 			std::string keyStr = netEventInfo.additionalInfo.substr(tagPos + 1);			//second part of the message contains the key pressed
 
-			int key = std::stoi(keyStr, nullptr, 0);
+			//Inserire eccezione
+			int key;
+			try{
+				key = std::stoi(keyStr, nullptr, 0);
+			}
+			catch (std::exception e) {
+				ResetEvent(eventRecNet);
+				break;
+			}
+			
 
 			INPUT *ip = new INPUT;
+			
 
 			if (keyEventType.compare("dw") == 0) {	//If user has pressed the key
 				ip->type = INPUT_KEYBOARD;
@@ -368,6 +376,7 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				ip->ki.wScan = 0;
 				ip->ki.time = 0;
 				ip->ki.dwExtraInfo = 0;
+
 				if (keyStr.compare(ALT_KEY) == 0) {
 					ip->ki.wVk = VK_MENU;
 				}
@@ -404,6 +413,7 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 					ip->ki.wVk = key;
 				}
 				SendInput(1, ip, sizeof(INPUT));
+
 
 			}
 
@@ -504,13 +514,11 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 		//Caso chiusura della connessione da parte del client
 		if (netEventInfo.pid == NETWORKEXIT) {
 			if (netObj.isConnected()) { //se il client è connesso invio la stringa di uscita
-				netObj.sendMessage(L"-10|exit");
+				netObj.sendMessage(L"-1|exit");
 			}
 		}	
 
 		std::cout << "hai ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()<< std::endl;
-
-
 
 		ResetEvent(eventRecNet);
 		break;
