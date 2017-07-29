@@ -8,7 +8,6 @@
 #include <mutex>
 #include <list>
 #include "IconExtractor.h"
-#include "MailSlotObj.h"
 #include "ProcessModel.h"
 #include "MyHook.h"
 

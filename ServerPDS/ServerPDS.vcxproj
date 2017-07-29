@@ -159,7 +159,6 @@
     <ClInclude Include="JsonSerializer.h" />
     <ClInclude Include="json\json-forwards.h" />
     <ClInclude Include="json\json.h" />
-    <ClInclude Include="MailSlotObj.h" />
     <ClInclude Include="MyHook.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="ProcessModel.h" />
@@ -173,7 +172,6 @@
     <ClCompile Include="IconExtractor.cpp" />
     <ClCompile Include="jsoncpp.cpp" />
     <ClCompile Include="JsonSerializer.cpp" />
-    <ClCompile Include="MailSlotObj.cpp" />
     <ClCompile Include="Network.cpp" />
     <ClCompile Include="ProcessModel.cpp" />
     <ClCompile Include="main.cpp" />

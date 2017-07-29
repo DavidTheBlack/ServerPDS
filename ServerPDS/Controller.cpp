@@ -20,6 +20,7 @@
 #include "Controller.h"
 
 
+
 Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms1")), 
 	x86ProcessPath(L"..\\x64\\Debug\\32BitCode\\ProcessMonitorX86.exe")
 {
@@ -348,13 +349,18 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 
 		//Case do ricezione di una shortcut da inviare al processo corrente
 		if (model.hwndToPid(model.getFocusedProcess()) == netEventInfo.pid) {
+			//Abbiamo 2 slash da oindividuare
 
+			size_t tagPos = netEventInfo.additionalInfo.find("/"); //Tag di separazione della descrizione del comando e del codice modificatore
+			size_t tagPos2 = netEventInfo.additionalInfo.find("/",tagPos+1); //Tag di separazione della descrizione del comando e del codice tasto
+			
+			std::cout << "Posizione primo /: " << tagPos << std::endl;
+			std::cout << "Posizione secondo /: " << tagPos2 << std::endl;
 
-			size_t tagPos = netEventInfo.additionalInfo.find("/"); //Tag di separazione della descrizione del comando e del codice tasto
-			std::cout << "Posizione /: " << tagPos << std::endl;
-
-			std::string keyEventType = netEventInfo.additionalInfo.substr(0, tagPos);	//First part of the message contains the action performed on the key
-			std::string keyStr = netEventInfo.additionalInfo.substr(tagPos + 1);			//second part of the message contains the key pressed
+			std::string keyEventType = netEventInfo.additionalInfo.substr(0, tagPos);					//First part of the message contains the action performed on the key
+			size_t modLength = tagPos2 - tagPos - 1;													//length of the modifier substring
+			std::string modifierStr = netEventInfo.additionalInfo.substr(tagPos + 1,modLength);		//second part of the message contains the modifiers pressed
+			std::string keyStr = netEventInfo.additionalInfo.substr(tagPos2 + 1);						//third part of the message contains the key pressed
 
 			//Inserire eccezione
 			int key;
@@ -365,6 +371,16 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				ResetEvent(eventRecNet);
 				break;
 			}
+			int modifier;
+			try {
+				modifier = std::stoi(modifierStr, nullptr, 0);
+			}
+			catch (std::exception e) {
+				ResetEvent(eventRecNet);
+				break;
+			}
+
+
 			
 
 			INPUT *ip = new INPUT;
@@ -377,6 +393,61 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				ip->ki.time = 0;
 				ip->ki.dwExtraInfo = 0;
 
+
+
+
+				//Combinazioni: 1 alt			1
+				//				2 ctrl			4
+				//				3 ctrl+alt		5		
+				//				4 ctrl+shift	6
+				//				5 alt+shift		3
+				//				6 ctrl+alt+shit	7
+				//				7 shift			2
+				//Invio eventuale modificatore inserito
+				if (modifier != 0) {
+					ip->ki.wVk = 0;
+					if (modifier & SHIFT) {
+						ip->ki.wVk |= VK_SHIFT;
+						SendInput(1, ip, sizeof(INPUT));
+					}
+					if (modifier & CTRL) {
+						ip->ki.wVk |= VK_CONTROL;
+						SendInput(1, ip, sizeof(INPUT));
+					}
+						
+					if (modifier & ALT) {
+						ip->ki.wVk |= VK_MENU;
+						SendInput(1, ip, sizeof(INPUT));
+					}					
+				}
+				//Invio il tasto inserito
+				ip->ki.wVk = key;
+				SendInput(1, ip, sizeof(INPUT));
+				
+/*
+				switch (modifier)
+				{
+				case 0:
+					break;
+				case 1:
+
+					break;
+				case 2:
+					break;
+				case 3:
+					break;
+				case 4:
+					break;
+				case 5:
+					break;
+				case 6:
+					break;
+				case 7:
+					break;			
+				default:
+					break;
+				}
+
 				if (keyStr.compare(ALT_KEY) == 0) {
 					ip->ki.wVk = VK_MENU;
 				}
@@ -390,7 +461,7 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 					ip->ki.wVk = key;
 				}
 
-				SendInput(1, ip, sizeof(INPUT));
+				SendInput(1, ip, sizeof(INPUT));*/
 					
 			}else if(keyEventType.compare("up") == 0){ //If user has released the key
 
@@ -400,7 +471,29 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				ip->ki.time = 0;
 				ip->ki.dwExtraInfo = 0;
 				
-				if (keyStr.compare(ALT_KEY) == 0) {
+				//Invio il tasto sollevato
+				ip->ki.wVk = key;
+				SendInput(1, ip, sizeof(INPUT));
+
+				if (modifier != 0) {
+					ip->ki.wVk = 0;
+					if (modifier & SHIFT) {
+						ip->ki.wVk |= VK_SHIFT;
+						SendInput(1, ip, sizeof(INPUT));
+					}
+					if (modifier & CTRL) {
+						ip->ki.wVk |= VK_CONTROL;
+						SendInput(1, ip, sizeof(INPUT));
+					}
+
+					if (modifier & ALT) {
+						ip->ki.wVk |= VK_MENU;
+						SendInput(1, ip, sizeof(INPUT));
+					}
+				}
+				
+
+				/*if (keyStr.compare(ALT_KEY) == 0) {
 					ip->ki.wVk = VK_MENU;
 				}
 				else if (keyStr.compare(CTRL_KEY) == 0) {
@@ -412,7 +505,7 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				else {
 					ip->ki.wVk = key;
 				}
-				SendInput(1, ip, sizeof(INPUT));
+				SendInput(1, ip, sizeof(INPUT));*/
 
 
 			}

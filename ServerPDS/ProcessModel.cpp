@@ -6,7 +6,7 @@
 #include <string>
 #include <Windows.h>
 #include "IconExtractor.h"
-#include "MailSlotObj.h"
+
 #include "ProcessModel.h"
 
 
