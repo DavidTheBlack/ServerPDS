@@ -32,9 +32,9 @@ Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms
 Controller::~Controller()
 {
 	//Terminiamo il processo monitor a 32 bit
-	//SetEvent(terminateMonitorX86);
-	//CloseHandle(x86ProcessInformation.hProcess);
-	//CloseHandle(x86ProcessInformation.hThread);
+	SetEvent(terminateMonitorX86);
+	CloseHandle(x86ProcessInformation.hProcess);
+	CloseHandle(x86ProcessInformation.hThread);
 
 }
 
