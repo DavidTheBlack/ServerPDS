@@ -46,7 +46,6 @@ int MyHook::Messages() {
 
 //Method used to start monitoring processes 
 int MyHook::StartMonitoringProcesses() {
-	//TODO GESTIRE CASO IN CUI NON SIA STATA CREATA LA CODA MESSAGGI
 	InstallHook();
 	return Messages();
 }
@@ -62,10 +61,7 @@ void MyHook::UninstallHook()
 	(*RunStopHook)(false, GetModuleHandle(0));
 	FreeLibrary(hModule);
 
-	std::string path = "C:\\Users\\David\\Desktop\\exit.txt";
-	std::fstream File(path, std::ios::app);
-	File << "Chiuso!";
-	File.close();
+	
 	
 }
 

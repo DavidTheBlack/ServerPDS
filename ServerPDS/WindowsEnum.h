@@ -1,4 +1,5 @@
-#pragma once
+#ifndef WINDOWSENUM_H
+#define WINDOWSENUM_H
 class WindowsEnum
 {
 public:
@@ -15,3 +16,4 @@ private:
 	static BOOL CALLBACK enumWindowsProc(__in  HWND hWnd, __in  LPARAM lParam);
 };
 
+#endif

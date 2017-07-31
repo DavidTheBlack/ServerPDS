@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MYHOOK_H
+#define MYHOOK_H
 
 class MyHook {
 protected:
@@ -21,3 +22,5 @@ public:
 	
 
 };
+
+#endif

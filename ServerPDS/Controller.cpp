@@ -36,6 +36,17 @@ Controller::~Controller()
 	SetEvent(terminateMonitorX86);
 	CloseHandle(x86ProcessInformation.hProcess);
 	CloseHandle(x86ProcessInformation.hThread);
+	
+	CloseHandle(eventX64);
+	CloseHandle(eventX64);
+	CloseHandle(eventClientConNet);
+	CloseHandle(eventRecNet);
+	CloseHandle(terminateMonitorX86);
+	
+
+
+
+
 
 }
 
@@ -89,21 +100,7 @@ bool Controller::Init()
 	WindowsEnum we;
 	we.enum_windows();
 	model.setProcessesList(we.getData());
-	//model.setProcessesList(we.enum_windows().getData());
 	
-	
-	////Trying to start the network
-	//std::thread netInitThread{ &Network::initNetwork,&netObj,"4444" };
-
-	/*if (!netObj.initNetwork("4444")) {
-		std::cout << "Impossibile avviare la connessione di rete" << std::endl;
-	}*/
-
-	
-	
-	//@TODO gestire gli errori Gestire anche il caso in cui non avvenga connessione da client - la funzione deve comunque partire
-	//l'inizializzazione della rete deve avvenire su thread separato
-
 	return true;
 }
 
@@ -141,10 +138,7 @@ bool Controller::ReadSlot()
 		(LPDWORD)NULL);              // no read time-out 
 
 	if (!fResult)
-	{
-		//@TODO scrivere gli errori in un file di log
-		/*printf("GetMailslotInfo failed with %d.\n", GetLastError());*/ 
-		
+	{	
 		return false;
 	}
 
@@ -163,7 +157,7 @@ bool Controller::ReadSlot()
 		// Allocate memory for the message. 
 		lpszBuffer = (LPTSTR)GlobalAlloc(GPTR, cbMessage);
 		if (NULL == lpszBuffer)
-			return FALSE;	
+			return false;	
 
 		lpszBuffer[0] = '\0';
 
@@ -174,11 +168,9 @@ bool Controller::ReadSlot()
 			NULL);
 
 		if (!fResult)
-		{
-			//@TODO SCRIVERE IL MESSAGGIO IN UN FILE DI LOG
-			//printf("ReadFile failed with %d.\n", GetLastError());
+		{			
 			GlobalFree((HGLOBAL)lpszBuffer);
-			return FALSE;
+			return false;
 		}
 
 		
@@ -198,8 +190,6 @@ bool Controller::ReadSlot()
 
 		if (!fResult)
 		{
-			//@TODO scrivere il messaggio di errore in un file di log
-			//printf("GetMailslotInfo failed (%d)\n", GetLastError()); 
 			return false;
 		}
 	}	
@@ -260,9 +250,7 @@ void Controller::ManageHookEvent(EventInfo info) {
 				netObj.sendMessage(pInfoStr);
 			}			
 		}
-		else {
-			//@TODO sollevare eccezione impossibilità inserire dato nel model
-		}
+		
 		
 		break;
 	}
@@ -280,9 +268,7 @@ void Controller::ManageHookEvent(EventInfo info) {
 				netObj.sendMessage(pInfoStr);
 			}		
 		}
-		else {
-			//@TODO sollevare eccezione impossibilità inserire dato nel model
-		}
+		
 		
 		break;
 	}
@@ -298,10 +284,7 @@ void Controller::ManageHookEvent(EventInfo info) {
 				pInfoStr = jSer.serializeProcessInfo(pInfoTmp);
 				netObj.sendMessage(pInfoStr);
 			}
-		}
-		else {
-			//@TODO sollevare eccezione impossibilità settare focus
-		}
+		}		
 		
 		break;
 	}
@@ -335,7 +318,7 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 		std::get<0>(pInfoTmp) = model.hwndToPid(model.getFocusedProcess());
 		std::get<1>(pInfoTmp) = WINDOWFOCUSED;
 		focusedProcessInfoStr = jSer.serializeProcessInfo(pInfoTmp);
-		netObj.sendMessage(focusedProcessInfoStr);
+		netObj.sendMessage(focusedProcessInfoStr);		
 		ResetEvent(eventClientConNet);		
 		break;
 	}
@@ -344,10 +327,9 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
 	{
 		//Se il processo in focus è lo stesso a cui il client ha mandato la shortcut gli passo la sequenza comandi
-		//std::cout << "Processo in focus: " << model.hwndToPid(model.getFocusedProcess()) << std::endl;
-		//std::cout << "Messaggio ricevuto da rete: " << netEventInfo.pid << std::endl;
+	
 
-		//Case do ricezione di una shortcut da inviare al processo corrente
+		//Caso di ricezione di una shortcut da inviare al processo corrente
 		if (model.hwndToPid(model.getFocusedProcess()) == netEventInfo.pid) {
 			//Abbiamo 2 slash da oindividuare
 
@@ -421,44 +403,7 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				ip->ki.wVk = key;
 				SendInput(1, ip, sizeof(INPUT));
 				
-/*
-				switch (modifier)
-				{
-				case 0:
-					break;
-				case 1:
 
-					break;
-				case 2:
-					break;
-				case 3:
-					break;
-				case 4:
-					break;
-				case 5:
-					break;
-				case 6:
-					break;
-				case 7:
-					break;			
-				default:
-					break;
-				}
-
-				if (keyStr.compare(ALT_KEY) == 0) {
-					ip->ki.wVk = VK_MENU;
-				}
-				else if (keyStr.compare(CTRL_KEY) == 0) {
-					ip->ki.wVk = VK_CONTROL;
-				}
-				else if (keyStr.compare(SHIFT_KEY) == 0) {
-					ip->ki.wVk = VK_SHIFT;
-				}
-				else {
-					ip->ki.wVk = key;
-				}
-
-				SendInput(1, ip, sizeof(INPUT));*/
 					
 			}else if(keyEventType.compare("up") == 0){ //If user has released the key
 
@@ -487,131 +432,17 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 						ip->ki.wVk = VK_MENU;
 						SendInput(1, ip, sizeof(INPUT));
 					}
-				}
-				
-
-				/*if (keyStr.compare(ALT_KEY) == 0) {
-					ip->ki.wVk = VK_MENU;
-				}
-				else if (keyStr.compare(CTRL_KEY) == 0) {
-					ip->ki.wVk = VK_CONTROL;
-				}
-				else if (keyStr.compare(SHIFT_KEY) == 0) {
-					ip->ki.wVk = VK_SHIFT;
-				}
-				else {
-					ip->ki.wVk = key;
-				}
-				SendInput(1, ip, sizeof(INPUT));*/
-
-
+				}							
 			}
-
-
-
-			////Combinazioni: 1 alt			1
-			////				2 ctrl			4
-			////				3 ctrl+alt		5		
-			////				4 ctrl+shift	6
-			////				5 alt+shift		3
-			////				6 ctrl+alt+shit	7
-			//switch (modifierKeyCombo)
-			//{
-			//case 0:
-			//case 1: //alt key
-			//case 4: //ctrl key
-			//{
-			//	INPUT *ip = new INPUT[4];
-			//	//Press the keys
-			//	ip[0].type = INPUT_KEYBOARD;
-			//	ip[0].ki.dwFlags = 0;
-			//	ip[0].ki.wScan = 0;
-			//	ip[0].ki.time = 0;
-			//	ip[0].ki.dwExtraInfo = 0;
-			//	if (modifierKeyCombo == 1)
-			//		ip[0].ki.wVk = VK_MENU;
-			//	else
-			//		ip[0].ki.wVk = VK_CONTROL;
-
-			//	ip[1].type = INPUT_KEYBOARD;
-			//	ip[1].ki.dwFlags = 0;
-			//	ip[1].ki.wVk = key;
-			//	ip[1].ki.wScan = 0;
-			//	ip[1].ki.time = 0;
-			//	ip[1].ki.dwExtraInfo = 0;
-
-			//	//Release the keys
-			//	ip[2].type = INPUT_KEYBOARD;
-			//	ip[2].ki.dwFlags = KEYEVENTF_KEYUP;
-			//	ip[2].ki.wScan = 0;
-			//	ip[2].ki.time = 0;
-			//	ip[2].ki.dwExtraInfo = 0;
-
-			//	if (modifierKeyCombo == 1)
-			//		ip[2].ki.wVk = VK_MENU;
-			//	else
-			//		ip[2].ki.wVk = VK_CONTROL;
-
-			//	ip[3].type = INPUT_KEYBOARD;
-			//	ip[3].ki.dwFlags = KEYEVENTF_KEYUP;
-			//	ip[3].ki.wScan = 0;
-			//	ip[3].ki.time = 0;
-			//	ip[3].ki.dwExtraInfo = 0;
-
-			//	ip[3].ki.wVk = key;
-			//	SendInput(4, ip, sizeof(INPUT));
-			//	break;
-
-			//}
-			
-			//}
-
-
-			/*TEST PER INVIARE HOTKEY ALLA FINESTRA*/
-
-			//INPUT ip;
-			//ip.type = INPUT_KEYBOARD;
-			//ip.ki.wScan = 0;
-			//ip.ki.time = 0;
-			//ip.ki.dwExtraInfo = 0;
-
-			//// Press the "Modifier" keys
-			//ip.ki.wVk = modKey;
-			//ip.ki.dwFlags = 0; // 0 for key press
-			//SendInput(1, &ip, sizeof(INPUT));
-
-			//// Press the key
-			//ip.ki.wVk = key;
-			//ip.ki.dwFlags = 0; // 0 for key press
-			//SendInput(1, &ip, sizeof(INPUT));
-
-			//// Release the key
-			//ip.ki.wVk = key;
-			//ip.ki.dwFlags = KEYEVENTF_KEYUP;
-			//SendInput(1, &ip, sizeof(INPUT));
-
-			//// Release the modifier keys
-			//ip.ki.wVk = modKey;
-			//ip.ki.dwFlags = KEYEVENTF_KEYUP;
-			//SendInput(1, &ip, sizeof(INPUT));
-			///*FINE TEST PER INVIARE HOTKEY ALLA FINESTRA*/
-
 		}
 
 		//Caso chiusura della connessione da parte del client
 		if (netEventInfo.pid == NETWORKEXIT) {
-			if (netObj.isConnected()) { //se il client è connesso invio la stringa di uscita
-				std::wstring netExitCode(L"7|exit");
-				int sentData = netObj.sendMessage(netExitCode);
-				sentData+= netObj.sendMessage(netExitCode);
-				std::cout << "Byte inviati: " << sentData << std::endl;
-
-				//netObj.sendMessage(NETWORKEXITCODE);
+			if (netObj.isConnected()) { //se il client è connesso invio la stringa di uscita				
+				netObj.sendMessage(NETWORKEXITCODE);
+				netObj.sendMessage(NETWORKEXITCODE);										
 			}
-		}	
-
-		std::cout << "Messaggio ricevuto da rete: " << netEventInfo.additionalInfo.c_str()<< std::endl;
-
+		}			
 		ResetEvent(eventRecNet);
 		break;
 	}
@@ -630,7 +461,6 @@ void Controller::Run()
 	
 	//Lanciamo processo di hook a 32 bit
 	if (!CreateProcess(x86ProcessPath, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &x86StartupInfo, &x86ProcessInformation)) {
-		//@TODO gestire errore
 		std::cout << "Errore avvio processo monitor 32 bit con errore:" << GetLastError() << std::endl;
 	}
 
@@ -659,14 +489,10 @@ void Controller::Run()
 					//Delete the top element of the queue
 					hookMessageQueue.pop();
 				}
-			}
-			else {
-				//@TODO gestire caso di errore
-			}
-
+			}			
 			break;
 		}
-		case 2: {			//Evento connessione client
+		case 2: {	//Evento connessione client
 			EventInfo netConnEventInfo;
 			netConnEventInfo.eventType = NETCLIENTCONNECTED;
 			ManageNetworkEvent(netConnEventInfo);
@@ -685,7 +511,5 @@ void Controller::Run()
 		default:
 			break;
 		}
-
 	}
-	//hookThread.join(); va messo?
 }

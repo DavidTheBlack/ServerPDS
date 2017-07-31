@@ -76,16 +76,14 @@
 	void Network::networkTask()
 	{
 		if (!initNetwork("4444")) {
-			std::cout << "Impossibile avviare la connessione di rete" << std::endl;
-			/*Sollevare eccezione ed uscire */
+			std::cout << "Impossibile avviare la connessione di rete - controllare la rete e riavviare l'applicazione" << std::endl;
+			return;
 		}
 		
 
 		while (true) {
 			if (!receiveMessages()) {
-				std::cout << "Receive message ha restituito un errore" << std::endl;
-				//Se la receive message torna false devo riavviare il socket e accettare nuove connessioni
-				//@TODO gestire la notifica della connessione e disconnessione tramite evento
+				std::cout << "Receive message ha restituito un errore" << std::endl;								
 				restartNetwork();
 			}
 		}
@@ -103,8 +101,7 @@
 			uint32_t varSize;
 			iResult = recv(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
 			if (iResult == SOCKET_ERROR) {
-				//Gestione errore
-				std::cout << "recv failed with error: \n" << WSAGetLastError() << std::endl;
+				//std::cout << "recv failed with error: \n" << WSAGetLastError() << std::endl;
 				closeConnection();
 				return false;	//ritorno dalla funzione di ricezione con errore
 			}
@@ -116,8 +113,7 @@
 			while (nLeft > 0) {
 				iResult = recv(hClientSocket, (char*)&recvbuf[idx], nLeft, 0);
 				if (iResult == SOCKET_ERROR) {
-					//Gestione errore
-					printf("recv failed with error: %d\n", WSAGetLastError());
+					//printf("recv failed with error: %d\n", WSAGetLastError());
 					closeConnection();
 					return false; //ritorno dalla funzione di ricezione con errore
 				}
@@ -139,18 +135,7 @@
 			pushNetworkMessage(messageInfo);
 
 			//Messaggio ricevuto, sollevo evento
-			SetEvent(networkMessageRecEvent);
-
-
-			//// Echo the buffer back to the sender
-			//iSendResult = send(hClientSocket, recvbuf, iResult, 0);
-			//if (iSendResult == SOCKET_ERROR) {
-			//	printf("send failed with error: %d\n", WSAGetLastError());
-			//	closeConnection();
-			//	return false;
-			//}
-			//else if (iResult == 0)
-			//	printf("Connection closing...\n");
+			SetEvent(networkMessageRecEvent);			
 
 		} while (iResult > 0);
 		return true;
@@ -177,8 +162,7 @@
 		//Send data packets
 		while (nLeft > 0) {
 			bytesSent = send(hClientSocket, (char*)&sendbuf[idx], nLeft, 0);
-			if (bytesSent == SOCKET_ERROR) {
-				//@TODO gestione degli errori
+			if (bytesSent == SOCKET_ERROR) {				
 				break;
 			}
 			nLeft -= bytesSent;
@@ -347,42 +331,7 @@
 
 		LocalFree(lpMsgBuf);
 		LocalFree(lpDisplayBuf);
-		//ExitProcess(dw);
 	}
-
-
-
-
-
-	//BackUpSend
-
-	//int Network::sendMessage(std::string data)
-	//{
-	//	char* sendbuf = new char[data.length()];
-
-	//	strcpy_s(sendbuf, data.length(), data.c_str());
-
-	//	const uint32_t varSize = data.length();
-
-	//	int idx = 0;
-	//	int nLeft = data.length();
-	//	int bytesSent;
-
-	//	//Send data size
-	//	send(hClientSocket, (char*)&varSize, sizeof(varSize), 0);
-	//	//Send data packets
-	//	while (nLeft > 0) {
-	//		bytesSent = send(hClientSocket, &sendbuf[idx], nLeft, 0);
-	//		if (bytesSent == SOCKET_ERROR) {
-	//			//@TODO gestione degli errori
-	//			break;
-	//		}
-	//		nLeft -= bytesSent;
-	//		idx += bytesSent;
-	//	}
-	//	return idx;
-	//}
-
 
 
 	

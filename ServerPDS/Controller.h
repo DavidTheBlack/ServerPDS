@@ -97,7 +97,7 @@ public:
    * @return bool
    * @param  KeyCombo Combinazione caratteri da consegnare alla finestra
    */
-  bool SendKeyCombo(std::string);
+  
 
 
 

@@ -233,9 +233,6 @@ DWORD CIconExtractor::WriteIconToICOString(LPICONRESOURCE lpIR, std::string& tar
 
 	//Convert string to base64
 
-	
-	
-
 
 	//Pass the icon string
 	targetString = base64_encode((unsigned char*)buffer, totbytez);
@@ -356,7 +353,6 @@ WORD CIconExtractor::DIBNumColors(LPSTR lpbi) const
         case 8: return 256;
         default:return 0;
     }
-    //return 0;
 }
 
 BOOL CIconExtractor::AddResourceProc(LPCTSTR lpszType, LPTSTR lpszName)
