@@ -13,7 +13,7 @@
 int main()
 {
 	HANDLE terminateMonitorX86Event = OpenEvent(EVENT_ALL_ACCESS, FALSE, L"terminateMonitorX86");
-	MyHook myHookObj32(L"..\\x64\\Debug\\32BitCode\\Dll32Bit.dll");
+	MyHook myHookObj32(L"Dll32Bit.dll");
 	
 	std::thread hookThread32{ &MyHook::StartMonitoringProcesses,&myHookObj32 };
 	

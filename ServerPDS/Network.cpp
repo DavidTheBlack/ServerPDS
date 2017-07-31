@@ -142,15 +142,15 @@
 			SetEvent(networkMessageRecEvent);
 
 
-			// Echo the buffer back to the sender
-			iSendResult = send(hClientSocket, recvbuf, iResult, 0);
-			if (iSendResult == SOCKET_ERROR) {
-				printf("send failed with error: %d\n", WSAGetLastError());
-				closeConnection();
-				return false;
-			}
-			else if (iResult == 0)
-				printf("Connection closing...\n");
+			//// Echo the buffer back to the sender
+			//iSendResult = send(hClientSocket, recvbuf, iResult, 0);
+			//if (iSendResult == SOCKET_ERROR) {
+			//	printf("send failed with error: %d\n", WSAGetLastError());
+			//	closeConnection();
+			//	return false;
+			//}
+			//else if (iResult == 0)
+			//	printf("Connection closing...\n");
 
 		} while (iResult > 0);
 		return true;

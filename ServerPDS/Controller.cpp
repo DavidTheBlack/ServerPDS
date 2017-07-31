@@ -22,7 +22,7 @@
 
 
 Controller::Controller() : myHookObj(L"Dll.dll"), Slot(TEXT("\\\\.\\mailslot\\ms1")), 
-	x86ProcessPath(L"..\\x64\\Debug\\32BitCode\\ProcessMonitorX86.exe")
+	x86ProcessPath(L"32BitCode\\ProcessMonitorX86.exe")
 {
 	//Inizializzazione strutture dati necessarie alla creazione processo monitor 32 bit
 	ZeroMemory(&x86StartupInfo, sizeof(x86StartupInfo));
@@ -344,18 +344,15 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 	case NETWORKMESSAGE:		//messaggio di rete ricevuto
 	{
 		//Se il processo in focus è lo stesso a cui il client ha mandato la shortcut gli passo la sequenza comandi
-		std::cout << "Processo in focus: " << model.hwndToPid(model.getFocusedProcess()) << std::endl;
-		std::cout << "Processo ricevuto via rete: " << netEventInfo.pid << std::endl;
+		//std::cout << "Processo in focus: " << model.hwndToPid(model.getFocusedProcess()) << std::endl;
+		//std::cout << "Messaggio ricevuto da rete: " << netEventInfo.pid << std::endl;
 
 		//Case do ricezione di una shortcut da inviare al processo corrente
 		if (model.hwndToPid(model.getFocusedProcess()) == netEventInfo.pid) {
 			//Abbiamo 2 slash da oindividuare
 
 			size_t tagPos = netEventInfo.additionalInfo.find("/"); //Tag di separazione della descrizione del comando e del codice modificatore
-			size_t tagPos2 = netEventInfo.additionalInfo.find("/",tagPos+1); //Tag di separazione della descrizione del comando e del codice tasto
-			
-			std::cout << "Posizione primo /: " << tagPos << std::endl;
-			std::cout << "Posizione secondo /: " << tagPos2 << std::endl;
+			size_t tagPos2 = netEventInfo.additionalInfo.find("/",tagPos+1); //Tag di separazione della descrizione del comando e del codice tasto		
 
 			std::string keyEventType = netEventInfo.additionalInfo.substr(0, tagPos);					//First part of the message contains the action performed on the key
 			size_t modLength = tagPos2 - tagPos - 1;													//length of the modifier substring
@@ -407,16 +404,16 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				if (modifier != 0) {
 					ip->ki.wVk = 0;
 					if (modifier & SHIFT) {
-						ip->ki.wVk |= VK_SHIFT;
+						ip->ki.wVk = VK_SHIFT;
 						SendInput(1, ip, sizeof(INPUT));
 					}
 					if (modifier & CTRL) {
-						ip->ki.wVk |= VK_CONTROL;
+						ip->ki.wVk = VK_CONTROL;
 						SendInput(1, ip, sizeof(INPUT));
 					}
 						
 					if (modifier & ALT) {
-						ip->ki.wVk |= VK_MENU;
+						ip->ki.wVk = VK_MENU;
 						SendInput(1, ip, sizeof(INPUT));
 					}					
 				}
@@ -478,16 +475,16 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 				if (modifier != 0) {
 					ip->ki.wVk = 0;
 					if (modifier & SHIFT) {
-						ip->ki.wVk |= VK_SHIFT;
+						ip->ki.wVk = VK_SHIFT;
 						SendInput(1, ip, sizeof(INPUT));
 					}
 					if (modifier & CTRL) {
-						ip->ki.wVk |= VK_CONTROL;
+						ip->ki.wVk = VK_CONTROL;
 						SendInput(1, ip, sizeof(INPUT));
 					}
 
 					if (modifier & ALT) {
-						ip->ki.wVk |= VK_MENU;
+						ip->ki.wVk = VK_MENU;
 						SendInput(1, ip, sizeof(INPUT));
 					}
 				}
@@ -570,9 +567,6 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 			//}
 
 
-
-
-
 			/*TEST PER INVIARE HOTKEY ALLA FINESTRA*/
 
 			//INPUT ip;
@@ -607,11 +601,16 @@ void Controller::ManageNetworkEvent(EventInfo netEventInfo)
 		//Caso chiusura della connessione da parte del client
 		if (netEventInfo.pid == NETWORKEXIT) {
 			if (netObj.isConnected()) { //se il client è connesso invio la stringa di uscita
-				netObj.sendMessage(L"-1|exit");
+				std::wstring netExitCode(L"7|exit");
+				int sentData = netObj.sendMessage(netExitCode);
+				sentData+= netObj.sendMessage(netExitCode);
+				std::cout << "Byte inviati: " << sentData << std::endl;
+
+				//netObj.sendMessage(NETWORKEXITCODE);
 			}
 		}	
 
-		std::cout << "hai ricevuto shortcut: " << netEventInfo.additionalInfo.c_str()<< std::endl;
+		std::cout << "Messaggio ricevuto da rete: " << netEventInfo.additionalInfo.c_str()<< std::endl;
 
 		ResetEvent(eventRecNet);
 		break;

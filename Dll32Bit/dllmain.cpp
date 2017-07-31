@@ -177,6 +177,7 @@ LRESULT CALLBACK ShellProc(
 		message = handleString + infoString;
 		//INVIAMO AL MAILSLOT
 		if (WriteSlot(hSlot, message.c_str())) {
+			Sleep(125);
 			SetEvent(processEvent);
 		}
 	}

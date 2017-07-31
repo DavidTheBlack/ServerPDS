@@ -7,8 +7,9 @@
 #define WINDOWFOCUSED 3
 #define NETCLIENTCONNECTED 4
 #define NETWORKMESSAGE 5
-#define NETWORKEXIT -10			//Used to communicate to close the connection
-#define ICONEXTRACTED 6			//Used to communicate with x86 process
+#define NETWORKEXIT 7					//Used to communicate to close the connection
+#define NETWORKEXITCODE L"7|exit"	
+
 
 
 

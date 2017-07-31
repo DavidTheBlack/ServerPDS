@@ -8,9 +8,9 @@
 #define CTRL_KEY "162"
 #define SHIFT_KEY "160"
 
-#define SHIFT	1
+#define SHIFT	4
 #define CTRL	2
-#define ALT		4
+#define ALT		1
 
 
 

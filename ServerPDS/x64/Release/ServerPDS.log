@@ -1,0 +1,15 @@
+﻿  Controller.cpp
+  EventInfo.cpp
+  Network.cpp
+Network.cpp(97): warning C4101: 'iSendResult': variabile locale senza riferimenti
+Network.cpp(167): warning C4267: 'inizializzazione': conversione da 'size_t' a 'uint32_t'. Possibile perdita di dati.
+Network.cpp(167): warning C4267: 'inizializzazione': conversione da 'size_t' a 'const uint32_t'. Possibile perdita di dati.
+Network.cpp(172): warning C4267: 'inizializzazione': conversione da 'size_t' a 'int'. Possibile perdita di dati.
+  main.cpp
+  Generazione codice in corso...
+  22 of 1888 functions ( 1.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    48 functions had inline decision re-evaluated but remain unchanged
+  Generazione codice terminata
+  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Release\ServerPDS.exe
+  ServerPDS.vcxproj -> C:\Users\David\Documents\Visual Studio 2015\Projects\ServerPDS\x64\Release\ServerPDS.pdb (Full PDB)
